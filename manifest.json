@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.ollieedgeley.ai-frontier-status",
   "name": "Frontier Status",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "Ollie Edgeley",
   "license": "MIT",
   "description": "Polls official status pages for frontier AI companies and lists their current health in an Omarchy panel.",

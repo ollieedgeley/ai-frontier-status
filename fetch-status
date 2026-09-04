@@ -19,7 +19,7 @@ from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parent
 CATALOG_PATH = ROOT / "companies.json"
-USER_AGENT = "ai-frontier-status/0.1.0 (Omarchy plugin; +https://github.com/ollieedgeley/ai-frontier-status)"
+USER_AGENT = "ai-frontier-status/1.0.0 (Omarchy plugin; +https://github.com/ollieedgeley/ai-frontier-status)"
 TIMEOUT_SEC = 8
 WORKERS = 8
 
