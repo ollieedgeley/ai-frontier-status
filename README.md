@@ -21,8 +21,6 @@ Every company starts off. Open settings and pick your roster. Official feeds onl
 omarchy plugin add https://github.com/ollieedgeley/ai-frontier-status.git --enable
 ```
 
-`--enable` asks which bar section to use. From this checkout, copy the folder into `~/.config/omarchy/plugins/io.github.ollieedgeley.ai-frontier-status/` first. Omarchy will not follow a symlink there.
-
 ## 🕹️ Controls
 
 - ⚙️ Gear or `s` for settings
