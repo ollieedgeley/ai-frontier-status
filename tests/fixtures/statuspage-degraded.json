@@ -1,0 +1,11 @@
+{
+  "page": {"name": "OpenAI", "url": "https://status.openai.com"},
+  "status": {"indicator": "minor", "description": "Degraded Performance"},
+  "components": [
+    {"name": "API", "status": "degraded_performance", "group": false},
+    {"name": "Login", "status": "operational", "group": false}
+  ],
+  "incidents": [
+    {"name": "Elevated API errors", "status": "investigating"}
+  ]
+}

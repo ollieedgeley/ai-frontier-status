@@ -1,0 +1,22 @@
+[
+  {
+    "id": "closed",
+    "end": "2026-02-27T14:35:00+00:00",
+    "external_desc": "Vertex AI Gemini API customers experienced increased error rates.",
+    "affected_products": [{"title": "Vertex Gemini API"}]
+  },
+  {
+    "id": "open-network",
+    "end": null,
+    "external_desc": "Networking blip in us-central1",
+    "status_impact": "low",
+    "affected_products": [{"title": "Compute Engine"}]
+  },
+  {
+    "id": "open-gemini",
+    "end": "",
+    "external_desc": "Gemini API elevated latency",
+    "status_impact": "medium",
+    "affected_products": [{"title": "Vertex Gemini API"}]
+  }
+]

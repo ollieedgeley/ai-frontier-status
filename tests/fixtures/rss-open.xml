@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>SpaceXAI System Status</title>
+    <item>
+      <title>[API] Models outage</title>
+      <description><![CDATA[<h3>Status: INVESTIGATING</h3>]]></description>
+      <category>outage</category>
+    </item>
+    <item>
+      <title>[Grok] Old incident</title>
+      <description><![CDATA[<h3>Status: RESOLVED</h3>]]></description>
+      <category>resolved</category>
+    </item>
+  </channel>
+</rss>

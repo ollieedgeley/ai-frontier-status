@@ -1,0 +1,395 @@
+[
+  {
+    "id": "openai",
+    "name": "OpenAI",
+    "url": "https://status.openai.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.openai.com/api/v2/summary.json"
+  },
+  {
+    "id": "anthropic",
+    "name": "Anthropic",
+    "url": "https://status.claude.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.anthropic.com/api/v2/summary.json"
+  },
+  {
+    "id": "google",
+    "name": "Google",
+    "url": "https://status.cloud.google.com",
+    "kind": "google-cloud",
+    "endpoint": "https://status.cloud.google.com/incidents.json"
+  },
+  {
+    "id": "xai",
+    "name": "xAI",
+    "url": "https://status.x.ai",
+    "kind": "rss",
+    "endpoint": "https://status.x.ai/feed.xml"
+  },
+  {
+    "id": "mistral",
+    "name": "Mistral",
+    "url": "https://status.mistral.ai",
+    "kind": "checkly",
+    "endpoint": "https://status.mistral.ai/"
+  },
+  {
+    "id": "deepseek",
+    "name": "DeepSeek",
+    "url": "https://status.deepseek.com",
+    "kind": "deepseek",
+    "endpoint": "https://status.deepseek.com/"
+  },
+  {
+    "id": "moonshot",
+    "name": "Moonshot",
+    "url": "https://status.moonshot.cn",
+    "kind": "statuspage",
+    "endpoint": "https://status.moonshot.cn/api/v2/summary.json"
+  },
+  {
+    "id": "cohere",
+    "name": "Cohere",
+    "url": "https://status.cohere.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.cohere.com/api/v2/summary.json"
+  },
+  {
+    "id": "minimax",
+    "name": "MiniMax",
+    "url": "https://status.minimax.io",
+    "kind": "statuspage",
+    "endpoint": "https://status.minimax.io/api/v2/summary.json"
+  },
+  {
+    "id": "ai21",
+    "name": "AI21",
+    "url": "https://status.ai21.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.ai21.com/api/v2/summary.json"
+  },
+  {
+    "id": "stability",
+    "name": "Stability AI",
+    "url": "https://status.stability.ai",
+    "kind": "statuspage",
+    "endpoint": "https://status.stability.ai/api/v2/summary.json"
+  },
+  {
+    "id": "scale",
+    "name": "Scale AI",
+    "url": "https://status.scale.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.scale.com/api/v2/summary.json"
+  },
+  {
+    "id": "copilot",
+    "name": "GitHub Copilot",
+    "url": "https://www.githubstatus.com",
+    "kind": "statuspage",
+    "endpoint": "https://www.githubstatus.com/api/v2/summary.json",
+    "componentMatch": "copilot"
+  },
+  {
+    "id": "cursor",
+    "name": "Cursor",
+    "url": "https://status.cursor.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.cursor.com/api/v2/summary.json"
+  },
+  {
+    "id": "devin",
+    "name": "Devin",
+    "url": "https://www.devinstatus.com",
+    "kind": "statuspage",
+    "endpoint": "https://www.devinstatus.com/api/v2/summary.json"
+  },
+  {
+    "id": "warp",
+    "name": "Warp",
+    "url": "https://status.warp.dev",
+    "kind": "statuspage",
+    "endpoint": "https://status.warp.dev/api/v2/summary.json"
+  },
+  {
+    "id": "zed",
+    "name": "Zed",
+    "url": "https://status.zed.dev",
+    "kind": "instatus",
+    "endpoint": "https://status.zed.dev/api/v2/summary.json"
+  },
+  {
+    "id": "tabnine",
+    "name": "Tabnine",
+    "url": "https://status.tabnine.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.tabnine.com/api/v2/summary.json"
+  },
+  {
+    "id": "sourcegraph",
+    "name": "Sourcegraph",
+    "url": "https://sourcegraphstatus.com",
+    "kind": "statuspage",
+    "endpoint": "https://sourcegraphstatus.com/api/v2/summary.json"
+  },
+  {
+    "id": "lovable",
+    "name": "Lovable",
+    "url": "https://status.lovable.dev",
+    "kind": "statuspage",
+    "endpoint": "https://status.lovable.dev/api/v2/summary.json"
+  },
+  {
+    "id": "bolt",
+    "name": "Bolt",
+    "url": "https://status.bolt.new",
+    "kind": "statuspage",
+    "endpoint": "https://status.bolt.new/api/v2/summary.json"
+  },
+  {
+    "id": "groq",
+    "name": "Groq",
+    "url": "https://groqstatus.com",
+    "kind": "statuspage",
+    "endpoint": "https://groqstatus.com/api/v2/summary.json"
+  },
+  {
+    "id": "fireworks",
+    "name": "Fireworks",
+    "url": "https://status.fireworks.ai",
+    "kind": "statuspage",
+    "endpoint": "https://status.fireworks.ai/api/v2/summary.json"
+  },
+  {
+    "id": "together",
+    "name": "Together",
+    "url": "https://status.together.ai",
+    "kind": "betterstack",
+    "endpoint": "https://status.together.ai/index.json"
+  },
+  {
+    "id": "huggingface",
+    "name": "Hugging Face",
+    "url": "https://status.huggingface.co",
+    "kind": "betterstack",
+    "endpoint": "https://status.huggingface.co/index.json"
+  },
+  {
+    "id": "cerebras",
+    "name": "Cerebras",
+    "url": "https://status.cerebras.ai",
+    "kind": "statuspage",
+    "endpoint": "https://status.cerebras.ai/api/v2/summary.json"
+  },
+  {
+    "id": "sambanova",
+    "name": "SambaNova",
+    "url": "https://status.sambanova.ai",
+    "kind": "statuspage",
+    "endpoint": "https://status.sambanova.ai/api/v2/summary.json"
+  },
+  {
+    "id": "replicate",
+    "name": "Replicate",
+    "url": "https://www.replicatestatus.com",
+    "kind": "statuspage",
+    "endpoint": "https://www.replicatestatus.com/api/v2/summary.json"
+  },
+  {
+    "id": "fal",
+    "name": "Fal",
+    "url": "https://status.fal.ai",
+    "kind": "instatus",
+    "endpoint": "https://status.fal.ai/summary.json"
+  },
+  {
+    "id": "baseten",
+    "name": "Baseten",
+    "url": "https://status.baseten.co",
+    "kind": "statuspage",
+    "endpoint": "https://status.baseten.co/api/v2/summary.json"
+  },
+  {
+    "id": "modal",
+    "name": "Modal",
+    "url": "https://status.modal.com",
+    "kind": "betterstack",
+    "endpoint": "https://status.modal.com/index.json"
+  },
+  {
+    "id": "novita",
+    "name": "Novita",
+    "url": "https://status.novita.ai",
+    "kind": "betterstack",
+    "endpoint": "https://status.novita.ai/index.json"
+  },
+  {
+    "id": "openrouter",
+    "name": "OpenRouter",
+    "url": "https://status.openrouter.ai",
+    "kind": "rss",
+    "endpoint": "https://status.openrouter.ai/incidents.rss"
+  },
+  {
+    "id": "deepinfra",
+    "name": "DeepInfra",
+    "url": "https://status.deepinfra.com",
+    "kind": "deepinfra",
+    "endpoint": "https://status.deepinfra.com/status.json"
+  },
+  {
+    "id": "lambda",
+    "name": "Lambda",
+    "url": "https://status.lambdalabs.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.lambdalabs.com/api/v2/summary.json"
+  },
+  {
+    "id": "nebius",
+    "name": "Nebius",
+    "url": "https://status.nebius.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.nebius.com/api/v2/summary.json"
+  },
+  {
+    "id": "nscale",
+    "name": "Nscale",
+    "url": "https://status.nscale.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.nscale.com/api/v2/summary.json"
+  },
+  {
+    "id": "perplexity",
+    "name": "Perplexity",
+    "url": "https://status.perplexity.com",
+    "kind": "instatus",
+    "endpoint": "https://status.perplexity.com/summary.json"
+  },
+  {
+    "id": "poe",
+    "name": "Poe",
+    "url": "https://status.poe.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.poe.com/api/v2/summary.json"
+  },
+  {
+    "id": "elevenlabs",
+    "name": "ElevenLabs",
+    "url": "https://status.elevenlabs.io",
+    "kind": "statuspage",
+    "endpoint": "https://status.elevenlabs.io/api/v2/summary.json"
+  },
+  {
+    "id": "deepgram",
+    "name": "Deepgram",
+    "url": "https://status.deepgram.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.deepgram.com/api/v2/summary.json"
+  },
+  {
+    "id": "assemblyai",
+    "name": "AssemblyAI",
+    "url": "https://status.assemblyai.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.assemblyai.com/api/v2/summary.json"
+  },
+  {
+    "id": "hume",
+    "name": "Hume",
+    "url": "https://status.hume.ai",
+    "kind": "statuspage",
+    "endpoint": "https://status.hume.ai/api/v2/summary.json"
+  },
+  {
+    "id": "otter",
+    "name": "Otter",
+    "url": "https://status.otter.ai",
+    "kind": "statuspage",
+    "endpoint": "https://status.otter.ai/api/v2/summary.json"
+  },
+  {
+    "id": "descript",
+    "name": "Descript",
+    "url": "https://status.descript.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.descript.com/api/v2/summary.json"
+  },
+  {
+    "id": "runway",
+    "name": "Runway",
+    "url": "https://status.runwayml.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.runwayml.com/api/v2/summary.json"
+  },
+  {
+    "id": "luma",
+    "name": "Luma",
+    "url": "https://status.lumalabs.ai",
+    "kind": "betterstack",
+    "endpoint": "https://status.lumalabs.ai/index.json"
+  },
+  {
+    "id": "heygen",
+    "name": "HeyGen",
+    "url": "https://status.heygen.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.heygen.com/api/v2/summary.json"
+  },
+  {
+    "id": "synthesia",
+    "name": "Synthesia",
+    "url": "https://status.synthesia.io",
+    "kind": "statuspage",
+    "endpoint": "https://status.synthesia.io/api/v2/summary.json"
+  },
+  {
+    "id": "ideogram",
+    "name": "Ideogram",
+    "url": "https://status.ideogram.ai",
+    "kind": "statuspage",
+    "endpoint": "https://status.ideogram.ai/api/v2/summary.json"
+  },
+  {
+    "id": "midjourney",
+    "name": "Midjourney",
+    "url": "https://status.midjourney.com",
+    "kind": "midjourney",
+    "endpoint": "https://storage.googleapis.com/midjourney-status/status-v2.json"
+  },
+  {
+    "id": "recraft",
+    "name": "Recraft",
+    "url": "https://status.recraft.ai",
+    "kind": "instatus",
+    "endpoint": "https://status.recraft.ai/api/v2/summary.json"
+  },
+  {
+    "id": "grammarly",
+    "name": "Grammarly",
+    "url": "https://status.grammarly.com",
+    "kind": "statuspage",
+    "endpoint": "https://status.grammarly.com/api/v2/summary.json"
+  },
+  {
+    "id": "pinecone",
+    "name": "Pinecone",
+    "url": "https://status.pinecone.io",
+    "kind": "statuspage",
+    "endpoint": "https://status.pinecone.io/api/v2/summary.json"
+  },
+  {
+    "id": "jina",
+    "name": "Jina",
+    "url": "https://status.jina.ai",
+    "kind": "statuspage",
+    "endpoint": "https://status.jina.ai/api/v2/summary.json"
+  },
+  {
+    "id": "qdrant",
+    "name": "Qdrant",
+    "url": "https://status.qdrant.io",
+    "kind": "betterstack",
+    "endpoint": "https://status.qdrant.io/index.json"
+  }
+]

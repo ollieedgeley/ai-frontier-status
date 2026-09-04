@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>OpenRouter Status - Incident History</title>
+    <item>
+      <title>Degraded video generation and batch jobs APIs</title>
+      <description><![CDATA[<strong>MONITORING</strong> - A fix has been implemented.]]></description>
+    </item>
+    <item>
+      <title>Web application degraded</title>
+      <description><![CDATA[<strong>RESOLVED</strong> - This incident has been resolved.]]></description>
+    </item>
+  </channel>
+</rss>

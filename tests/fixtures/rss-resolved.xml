@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>SpaceXAI System Status</title>
+    <item>
+      <title>[API] Models outage</title>
+      <description><![CDATA[<h3>Status: RESOLVED</h3><p>Resolved: Thu, 03 Sep 2026 17:08:11 GMT</p>]]></description>
+      <category>resolved</category>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "overallStatus": "OPERATIONAL",
+  "services": [
+    {"publicId": "api", "displayName": "API", "status": "OPERATIONAL"},
+    {"publicId": "website", "displayName": "Website", "status": "OPERATIONAL"}
+  ],
+  "models": [
+    {"publicId": "some-model", "displayName": "Some Model", "status": "PARTIAL_OUTAGE"}
+  ],
+  "activeIncidents": []
+}

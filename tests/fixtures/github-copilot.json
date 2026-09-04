@@ -1,0 +1,22 @@
+{
+  "page": {"name": "GitHub", "url": "https://www.githubstatus.com"},
+  "status": {"indicator": "major", "description": "Partial System Outage"},
+  "components": [
+    {"name": "Actions", "status": "major_outage", "group": false},
+    {"name": "Copilot", "status": "operational", "group": false},
+    {"name": "Copilot AI Model Providers", "status": "degraded_performance", "group": false},
+    {"name": "Packages", "status": "operational", "group": false}
+  ],
+  "incidents": [
+    {
+      "name": "Actions runners unavailable",
+      "status": "investigating",
+      "components": [{"name": "Actions", "status": "major_outage"}]
+    },
+    {
+      "name": "Incident with Grok Copilot AI Model Provider",
+      "status": "identified",
+      "components": [{"name": "Copilot AI Model Providers", "status": "degraded_performance"}]
+    }
+  ]
+}

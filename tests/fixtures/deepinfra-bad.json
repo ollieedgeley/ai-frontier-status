@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "overallStatus": "DEGRADED",
+  "services": [
+    {"publicId": "api", "displayName": "API", "status": "DEGRADED"}
+  ],
+  "activeIncidents": [
+    {"title": "API latency elevated", "status": "investigating"}
+  ]
+}

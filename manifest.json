@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.ollieedgeley.ai-frontier-status",
+  "name": "Frontier Status",
+  "version": "0.1.0",
+  "author": "Ollie Edgeley",
+  "license": "MIT",
+  "description": "Polls official status pages for frontier AI companies and lists their current health in an Omarchy panel.",
+  "preview": "preview.png",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Frontier Status",
+    "description": "Status of frontier AI companies",
+    "category": "AI",
+    "defaultSection": "right",
+    "allowMultiple": false,
+    "defaults": {
+      "refreshIntervalSec": 60,
+      "enabledIds": ""
+    },
+    "schema": [
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Poll interval (seconds)",
+        "min": 30,
+        "max": 3600,
+        "step": 30,
+        "defaultValue": 60
+      },
+      {
+        "key": "enabledIds",
+        "type": "string",
+        "label": "Enabled company ids",
+        "description": "Company ids to poll. Empty means none. Stored by the panel settings page.",
+        "defaultValue": ""
+      }
+    ]
+  }
+}

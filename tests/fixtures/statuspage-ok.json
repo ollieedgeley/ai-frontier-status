@@ -1,0 +1,9 @@
+{
+  "page": {"name": "OpenAI", "url": "https://status.openai.com"},
+  "status": {"indicator": "none", "description": "All Systems Operational"},
+  "components": [
+    {"name": "API", "status": "operational", "group": false},
+    {"name": "Hidden group", "status": "partial_outage", "group": true}
+  ],
+  "incidents": []
+}

@@ -1,0 +1,10 @@
+{
+  "overall_status": "success",
+  "headlines": [
+    {"label": "Image Generation", "message": "You **can** create images right now.", "status": "success"},
+    {"label": "Discord Bot", "message": "The Discord Bot **is running**", "status": "success"}
+  ],
+  "wait_times": [
+    {"label": "V7 Model", "fast": {"formatted": "1m 7s", "status": "error"}}
+  ]
+}

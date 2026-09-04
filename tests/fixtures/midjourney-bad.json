@@ -1,0 +1,7 @@
+{
+  "overall_status": "error",
+  "headlines": [
+    {"label": "Image Generation", "message": "You **cannot** create images right now.", "status": "error"},
+    {"label": "Website", "message": "The Website **is running**", "status": "success"}
+  ]
+}
