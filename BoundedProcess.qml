@@ -32,6 +32,7 @@ Process {
   }
 
   function settle() {
+    // Exit and runningChanged can both schedule settlement. Only the first wins.
     if (!pending || running) return
     watchdog.stop()
     pending = false
@@ -64,6 +65,7 @@ Process {
   }
   onExited: function(exitCode) {
     resultCode = exitCode
+    // Let exit state and the final stream chunks arrive before notifying consumers.
     Qt.callLater(settle)
   }
   onRunningChanged: if (!running && pending) Qt.callLater(settle)

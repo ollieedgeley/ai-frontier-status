@@ -26,12 +26,9 @@ Panel {
   property var catalog: []
   property var reportCompanies: []
   property string loadError: ""
-  property string commandStdout: ""
-  property string commandStderr: ""
   property bool loading: false
   property bool refreshQueued: false
   property bool settingsOpen: false
-  property int lastExitCode: 0
 
   readonly property int refreshIntervalSec: Model.clampRefreshInterval(setting("refreshIntervalSec", 60), 60)
   readonly property var enabledMap: Model.enabledMapFromSettings(root.settings, catalog)
@@ -95,7 +92,7 @@ Panel {
   }
 
   function refresh() {
-    if (fetchProcess.pending || fetchProcess.running) {
+    if (loading || fetchProcess.pending || fetchProcess.running) {
       refreshQueued = true
       return
     }
@@ -107,24 +104,20 @@ Panel {
     }
     refreshQueued = false
     loading = true
-    commandStdout = ""
-    commandStderr = ""
-    lastExitCode = 0
     fetchProcess.command = ["python3", fetchScript, "fetch", "--enabled", enabledFetchIds.join(",")]
     fetchProcess.launch()
   }
 
-  function finishRefresh() {
-    loading = false
-    var parsed = Model.parseReport(commandStdout, catalog)
-    if (lastExitCode !== 0 || !parsed.ok) {
+  function finishRefresh(exitCode) {
+    var parsed = Model.parseReport(fetchProcess.output, catalog)
+    if (exitCode !== 0 || !parsed.ok) {
       reportCompanies = []
-      loadError = fetchProcess.failure || commandStderr || parsed.error || "Status fetch failed"
-      if (refreshQueued) Qt.callLater(refresh)
-      return
+      loadError = fetchProcess.failure || fetchProcess.errorOutput || parsed.error || "Status fetch failed"
+    } else {
+      reportCompanies = parsed.companies
+      loadError = ""
     }
-    reportCompanies = parsed.companies
-    loadError = ""
+    loading = false
     if (refreshQueued) Qt.callLater(refresh)
   }
 
@@ -191,10 +184,8 @@ Panel {
   BoundedProcess {
     id: fetchProcess
     onCompleted: function(exitCode) {
-      root.commandStdout = output
-      root.commandStderr = errorOutput
-      root.lastExitCode = exitCode
-      Qt.callLater(root.finishRefresh)
+      // Consume this invocation before another refresh can replace its output.
+      root.finishRefresh(exitCode)
     }
   }
 
