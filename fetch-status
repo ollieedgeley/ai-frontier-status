@@ -7,7 +7,9 @@ import argparse
 import json
 import os
 import re
+import signal
 import sys
+import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -22,6 +24,27 @@ CATALOG_PATH = ROOT / "companies.json"
 USER_AGENT = "ai-frontier-status/1.0.0 (Omarchy plugin; +https://github.com/ollieedgeley/ai-frontier-status)"
 TIMEOUT_SEC = 8
 WORKERS = 8
+MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+MAX_OUTPUT_BYTES = 512 * 1024
+FETCH_DEADLINE_SEC = 60
+
+
+def arm_deadline(seconds: float = FETCH_DEADLINE_SEC) -> None:
+    # A kernel deadline kills the entire process, including blocked worker threads.
+    # A Python exception would wait for the executor's workers during shutdown.
+    signal.signal(signal.SIGALRM, signal.SIG_DFL)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+
+
+def write_report(report: dict[str, Any]) -> None:
+    chunks = []
+    size = 1  # trailing newline
+    for chunk in json.JSONEncoder(ensure_ascii=True).iterencode(report):
+        size += len(chunk)
+        if size > MAX_OUTPUT_BYTES:
+            raise ValueError("Status report exceeds output limit")
+        chunks.append(chunk)
+    sys.stdout.write("".join(chunks) + "\n")
 
 GOOGLE_PRODUCT_RE = re.compile(
     r"gemini|vertex ai|imagen|veo|deepmind|google ai studio|generative language",
@@ -68,6 +91,7 @@ def utc_now() -> str:
 
 
 def http_get(url: str, timeout: int = TIMEOUT_SEC) -> tuple[str, str]:
+    deadline = time.monotonic() + timeout
     request = urllib.request.Request(
         url,
         headers={
@@ -76,7 +100,23 @@ def http_get(url: str, timeout: int = TIMEOUT_SEC) -> tuple[str, str]:
         },
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        raw = response.read()
+        length = response.headers.get("Content-Length")
+        if length is not None and (int(length) < 0 or int(length) > MAX_RESPONSE_BYTES):
+            raise ValueError("Status response exceeds byte limit")
+        if response.headers.get("Content-Encoding", "identity").lower() != "identity":
+            raise ValueError("Compressed status responses are not supported")
+        raw = bytearray()
+        while True:
+            if time.monotonic() >= deadline:
+                raise TimeoutError("Status response timed out")
+            chunk = response.read1(min(65536, MAX_RESPONSE_BYTES + 1 - len(raw)))
+            if time.monotonic() >= deadline:
+                raise TimeoutError("Status response timed out")
+            if not chunk:
+                break
+            raw.extend(chunk)
+            if len(raw) > MAX_RESPONSE_BYTES:
+                raise ValueError("Status response exceeds byte limit")
         charset = response.headers.get_content_charset() or "utf-8"
         content_type = response.headers.get_content_type() or ""
         return raw.decode(charset, "replace"), content_type
@@ -685,6 +725,7 @@ def parse_id_list(raw: str | None) -> list[str] | None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    arm_deadline()
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("catalog", help="Print the company catalog")
@@ -694,13 +735,11 @@ def main(argv: list[str] | None = None) -> int:
     command = args.command or "fetch"
     catalog = load_catalog()
     if command == "catalog":
-        json.dump({"companies": catalog}, sys.stdout, ensure_ascii=False)
-        sys.stdout.write("\n")
+        write_report({"companies": catalog})
         return 0
     enabled = parse_id_list(getattr(args, "enabled", ""))
     report = fetch_report(catalog, enabled)
-    json.dump(report, sys.stdout, ensure_ascii=False)
-    sys.stdout.write("\n")
+    write_report(report)
     return 0
 
 
@@ -709,3 +748,7 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except BrokenPipeError:
         os._exit(0)
+    except Exception:
+        # Remote exception text and tracebacks must not become unbounded stderr.
+        sys.stderr.write("Status fetch failed\n")
+        raise SystemExit(1)

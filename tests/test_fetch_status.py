@@ -2,7 +2,12 @@
 import importlib.machinery
 import importlib.util
 import json
+import io
+import signal
+import subprocess
+import sys
 import unittest
+from email.message import Message
 from pathlib import Path
 from unittest import mock
 
@@ -37,6 +42,57 @@ def read(name: str) -> str:
 
 
 class FetchStatusTests(unittest.TestCase):
+    def response(self, body, **headers):
+        response = io.BytesIO(body)
+        response.headers = Message()
+        for key, value in headers.items():
+            response.headers[key.replace("_", "-")] = str(value)
+        return response
+
+    def test_http_body_limit_with_absent_or_dishonest_length(self):
+        for headers in ({}, {"Content_Length": 1}, {"Content_Length": 17}):
+            with self.subTest(headers=headers), mock.patch.object(FS, "MAX_RESPONSE_BYTES", 16):
+                response = self.response(b"x" * 17, **headers)
+                with mock.patch.object(FS.urllib.request, "urlopen", return_value=response):
+                    with self.assertRaisesRegex(ValueError, "byte limit"):
+                        FS.http_get("https://example.test")
+
+    def test_http_body_at_limit_and_compression_rejected(self):
+        with mock.patch.object(FS, "MAX_RESPONSE_BYTES", 16):
+            with mock.patch.object(FS.urllib.request, "urlopen", return_value=self.response(b"x" * 16)):
+                self.assertEqual(FS.http_get("https://example.test")[0], "x" * 16)
+        with mock.patch.object(FS.urllib.request, "urlopen", return_value=self.response(b"x", Content_Encoding="gzip")):
+            with self.assertRaisesRegex(ValueError, "Compressed"):
+                FS.http_get("https://example.test")
+
+    def test_http_trickle_exceeds_elapsed_deadline(self):
+        response = self.response(b"x")
+        with mock.patch.object(FS.urllib.request, "urlopen", return_value=response), \
+             mock.patch.object(FS.time, "monotonic", side_effect=[0, 1, 9]):
+            with self.assertRaises(TimeoutError):
+                FS.http_get("https://example.test", timeout=8)
+
+    def test_output_limit_emits_no_partial_json(self):
+        output = io.StringIO()
+        with mock.patch.object(FS.sys, "stdout", output), mock.patch.object(FS, "MAX_OUTPUT_BYTES", 32):
+            with self.assertRaisesRegex(ValueError, "output limit"):
+                FS.write_report({"text": "x" * 33})
+        self.assertEqual(output.getvalue(), "")
+
+    def test_hard_deadline_kills_blocked_worker_threads(self):
+        code = """
+import runpy, sys, time
+from concurrent.futures import ThreadPoolExecutor
+module = runpy.run_path(sys.argv[1], run_name='deadline_test')
+module['arm_deadline'](0.15)
+with ThreadPoolExecutor() as pool:
+    pool.submit(time.sleep, 30).result()
+"""
+        result = subprocess.run([sys.executable, "-c", code, str(ROOT / "fetch-status")],
+                                capture_output=True, timeout=3)
+        self.assertEqual(result.returncode, -signal.SIGALRM)
+        self.assertEqual(result.stderr, b"")
+
     def test_catalog_ids_are_unique(self):
         catalog = FS.load_catalog()
         ids = [item["id"] for item in catalog]

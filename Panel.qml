@@ -95,7 +95,7 @@ Panel {
   }
 
   function refresh() {
-    if (fetchProcess.running) {
+    if (fetchProcess.pending || fetchProcess.running) {
       refreshQueued = true
       return
     }
@@ -111,14 +111,15 @@ Panel {
     commandStderr = ""
     lastExitCode = 0
     fetchProcess.command = ["python3", fetchScript, "fetch", "--enabled", enabledFetchIds.join(",")]
-    fetchProcess.running = true
+    fetchProcess.launch()
   }
 
   function finishRefresh() {
     loading = false
     var parsed = Model.parseReport(commandStdout, catalog)
     if (lastExitCode !== 0 || !parsed.ok) {
-      loadError = parsed.error || commandStderr || "Status fetch failed"
+      reportCompanies = []
+      loadError = fetchProcess.failure || commandStderr || parsed.error || "Status fetch failed"
       if (refreshQueued) Qt.callLater(refresh)
       return
     }
@@ -150,23 +151,21 @@ Panel {
     printErrors: false
     onFileChanged: reload()
     onLoaded: root.catalog = Model.catalogFromJson(text())
-    onLoadFailed: if (!catalogProcess.running) catalogProcess.running = true
+    onLoadFailed: catalogProcess.launch()
   }
 
-  Process {
+  BoundedProcess {
     id: catalogProcess
-    running: false
+    timeoutMs: 5000
     command: ["python3", root.fetchScript, "catalog"]
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: {
-        var loaded = Model.catalogFromJson(text)
-        if (loaded.length) root.catalog = loaded
-      }
+    onCompleted: function(code) {
+      if (code !== 0) return
+      var loaded = Model.catalogFromJson(output)
+      if (loaded.length) root.catalog = loaded
     }
   }
 
-  Component.onCompleted: if (!catalogProcess.running) catalogProcess.running = true
+  Component.onCompleted: catalogProcess.launch()
 
   onCatalogChanged: if (catalog.length && enabledFetchIds.length) refresh()
 
@@ -189,18 +188,11 @@ Panel {
     function refresh(): void { root.refresh() }
   }
 
-  Process {
+  BoundedProcess {
     id: fetchProcess
-    running: false
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: root.commandStdout = String(text || "")
-    }
-    stderr: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: root.commandStderr = String(text || "")
-    }
-    onExited: function(exitCode) {
+    onCompleted: function(exitCode) {
+      root.commandStdout = output
+      root.commandStderr = errorOutput
       root.lastExitCode = exitCode
       Qt.callLater(root.finishRefresh)
     }
