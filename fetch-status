@@ -27,6 +27,73 @@ WORKERS = 8
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 MAX_OUTPUT_BYTES = 512 * 1024
 FETCH_DEADLINE_SEC = 60
+MAX_PARSE_NODES = 20000
+MAX_PARSE_DEPTH = 32
+MAX_COLLECTION_ITEMS = 4096
+MAX_SOURCE_STRING = 32768
+MAX_INCIDENTS = 16
+MAX_COMPONENTS = 64
+MAX_FIELD_CHARS = 512
+
+
+def checked_body(body: str) -> str:
+    if len(body) > MAX_RESPONSE_BYTES or len(body.encode("utf-8")) > MAX_RESPONSE_BYTES:
+        raise ValueError("Status response exceeds byte limit")
+    return body
+
+
+def parse_json(body: str) -> Any:
+    data = json.loads(checked_body(body))
+    stack = [(data, 0)]
+    nodes = 0
+    while stack:
+        value, depth = stack.pop()
+        nodes += 1
+        if nodes > MAX_PARSE_NODES or depth > MAX_PARSE_DEPTH:
+            raise ValueError("Status payload exceeds complexity limit")
+        if isinstance(value, str) and len(value) > MAX_SOURCE_STRING:
+            raise ValueError("Status payload string exceeds limit")
+        if isinstance(value, (dict, list)):
+            if len(value) > MAX_COLLECTION_ITEMS:
+                raise ValueError("Status payload collection exceeds limit")
+            if isinstance(value, dict):
+                if any(len(key) > MAX_SOURCE_STRING for key in value):
+                    raise ValueError("Status payload key exceeds limit")
+                values = value.values()
+            else:
+                values = value
+            stack.extend((item, depth + 1) for item in values)
+    return data
+
+
+def parse_xml(body: str) -> ET.Element:
+    checked_body(body)
+    # Status feeds need no DTD or entities. Reject them before XML expansion.
+    if re.search(r"<!\s*(?:DOCTYPE|ENTITY)", body, re.I):
+        raise ValueError("XML declarations are not supported")
+    parser = ET.XMLPullParser(events=("start", "end"))
+    depth = nodes = 0
+    root = None
+    for offset in range(0, len(body), 4096):
+        parser.feed(body[offset:offset + 4096])
+        for event, element in parser.read_events():
+            if event == "start":
+                if root is None:
+                    root = element
+                depth += 1
+                nodes += 1
+                if depth > MAX_PARSE_DEPTH or nodes > MAX_PARSE_NODES:
+                    raise ValueError("RSS payload exceeds complexity limit")
+            else:
+                if len(element) > MAX_COLLECTION_ITEMS or any(
+                    len(text or "") > MAX_SOURCE_STRING for text in (element.text, element.tail)
+                ):
+                    raise ValueError("RSS payload exceeds collection or string limit")
+                depth -= 1
+    parser.close()
+    if root is None:
+        raise ValueError("RSS payload is empty")
+    return root
 
 
 def arm_deadline(seconds: float = FETCH_DEADLINE_SEC) -> None:
@@ -135,6 +202,15 @@ def empty_company(row: dict[str, Any], **overrides: Any) -> dict[str, Any]:
         "components": [],
     }
     result.update(overrides)
+    # Classification uses the full validated input; only display details are truncated.
+    for key in ("id", "name", "url", "indicator", "label", "error"):
+        result[key] = str(result[key])[:MAX_FIELD_CHARS]
+    for key, limit in (("incidents", MAX_INCIDENTS), ("components", MAX_COMPONENTS)):
+        result[key] = [
+            {field: str(item[field])[:MAX_FIELD_CHARS]
+             for field in ("name", "status", "severity") if field in item}
+            for item in result[key][:limit]
+        ]
     return result
 
 
@@ -207,7 +283,7 @@ def label_for(indicator: str, description: str, degraded: bool) -> str:
 
 
 def parse_statuspage(body: str, row: dict[str, Any]) -> dict[str, Any]:
-    data = json.loads(body)
+    data = parse_json(body)
     if not isinstance(data, dict):
         raise ValueError("Statuspage payload is not an object")
     status = data.get("status")
@@ -258,7 +334,7 @@ def parse_statuspage(body: str, row: dict[str, Any]) -> dict[str, Any]:
 
 
 def parse_instatus(body: str, row: dict[str, Any]) -> dict[str, Any]:
-    data = json.loads(body)
+    data = parse_json(body)
     if not isinstance(data, dict):
         raise ValueError("Instatus payload is not an object")
     page = data.get("page")
@@ -294,7 +370,7 @@ def parse_instatus(body: str, row: dict[str, Any]) -> dict[str, Any]:
 
 
 def parse_betterstack(body: str, row: dict[str, Any]) -> dict[str, Any]:
-    data = json.loads(body)
+    data = parse_json(body)
     if not isinstance(data, dict):
         raise ValueError("Better Stack payload is not an object")
     resource = data.get("data")
@@ -333,7 +409,7 @@ def google_product_hit(incident: dict[str, Any]) -> bool:
 
 
 def parse_google_cloud(body: str, row: dict[str, Any]) -> dict[str, Any]:
-    data = json.loads(body)
+    data = parse_json(body)
     if not isinstance(data, list):
         raise ValueError("Google incidents payload is not a list")
     incidents = []
@@ -382,7 +458,7 @@ def rss_item_resolved(description: str, categories: list[str]) -> bool:
 
 
 def parse_rss(body: str, row: dict[str, Any]) -> dict[str, Any]:
-    root = ET.fromstring(body)
+    root = parse_xml(body)
     channel = root.find("./channel")
     if root.tag != "rss" or channel is None or not rss_text(channel.find("title")).strip():
         raise ValueError("RSS payload has no titled channel")
@@ -415,28 +491,40 @@ def parse_rss(body: str, row: dict[str, Any]) -> dict[str, Any]:
 
 
 def extract_nuxt_data(html: str) -> list[Any] | None:
+    checked_body(html)
     match = re.search(r'id="__NUXT_DATA__"[^>]*>(.*?)</script>', html, re.S)
     if not match:
         return None
-    data = json.loads(match.group(1))
+    data = parse_json(match.group(1))
     return data if isinstance(data, list) else None
 
 
-def deref_nuxt(data: list[Any], value: Any) -> Any:
-    if isinstance(value, int) and 0 <= value < len(data):
+def deref_nuxt(data: list[Any], value: Any, budget: list[int] | None = None,
+               active: set[int] | None = None, depth: int = 0) -> Any:
+    budget = [MAX_PARSE_NODES] if budget is None else budget
+    active = set() if active is None else active
+    budget[0] -= 1
+    if budget[0] < 0 or depth > MAX_PARSE_DEPTH:
+        raise ValueError("Nuxt expansion exceeds complexity limit")
+    if type(value) is int and 0 <= value < len(data):
+        if value in active:
+            raise ValueError("Nuxt reference cycle")
         target = data[value]
-        if target is value:
-            return target
         if isinstance(target, (str, bool)) or target is None:
             return target
         if isinstance(target, (int, float)) and not isinstance(target, bool):
             return target
-        if isinstance(target, dict) and {"id", "name", "severity"} <= set(target):
-            return {key: deref_nuxt(data, item) for key, item in target.items()}
-        if isinstance(target, list) and target and isinstance(target[0], int):
-            return [deref_nuxt(data, item) for item in target]
-        if isinstance(target, dict) and "incidents" in target:
-            return {key: deref_nuxt(data, item) for key, item in target.items()}
+        active.add(value)
+        try:
+            if isinstance(target, dict) and (
+                {"id", "name", "severity"} <= target.keys() or "incidents" in target
+            ):
+                return {key: deref_nuxt(data, item, budget, active, depth + 1)
+                        for key, item in target.items()}
+            if isinstance(target, list) and target and type(target[0]) is int:
+                return [deref_nuxt(data, item, budget, active, depth + 1) for item in target]
+        finally:
+            active.remove(value)
         return target
     return value
 
@@ -444,6 +532,7 @@ def deref_nuxt(data: list[Any], value: Any) -> Any:
 def parse_checkly(body: str, row: dict[str, Any]) -> dict[str, Any]:
     data = extract_nuxt_data(body)
     incidents: list[dict[str, str]] = []
+    budget = [MAX_PARSE_NODES]
     if data:
         for value in data:
             if not isinstance(value, dict):
@@ -451,7 +540,7 @@ def parse_checkly(body: str, row: dict[str, Any]) -> dict[str, Any]:
             for key, index in value.items():
                 if not str(key).startswith("unresolved-incidents-"):
                     continue
-                payload = deref_nuxt(data, index)
+                payload = deref_nuxt(data, index, budget)
                 raw_incidents = []
                 if isinstance(payload, dict):
                     raw_incidents = payload.get("incidents") or []
@@ -505,11 +594,13 @@ class _HeadingParser(HTMLParser):
         self._capture = False
         self.headings: list[str] = []
         self._buf: list[str] = []
+        self._length = 0
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag in {"h1", "h2"}:
+        if tag in {"h1", "h2"} and len(self.headings) < 4:
             self._capture = True
             self._buf = []
+            self._length = 0
 
     def handle_endtag(self, tag: str) -> None:
         if tag in {"h1", "h2"} and self._capture:
@@ -520,15 +611,16 @@ class _HeadingParser(HTMLParser):
 
     def handle_data(self, data: str) -> None:
         if self._capture:
+            self._length += len(data)
+            if self._length > MAX_SOURCE_STRING:
+                raise ValueError("Status heading exceeds string limit")
             self._buf.append(data)
 
 
 def parse_deepseek(body: str, row: dict[str, Any]) -> dict[str, Any]:
+    checked_body(body)
     parser = _HeadingParser()
-    try:
-        parser.feed(body)
-    except Exception:
-        parser.headings = []
+    parser.feed(body)
     heading = " ".join(parser.headings[:4])
     if heading and DEEPSEEK_BAD_RE.search(heading):
         return empty_company(
@@ -566,7 +658,7 @@ def strip_midjourney_markup(text: str) -> str:
 
 
 def parse_midjourney(body: str, row: dict[str, Any]) -> dict[str, Any]:
-    data = json.loads(body)
+    data = parse_json(body)
     if not isinstance(data, dict):
         raise ValueError("Midjourney payload is not an object")
     overall = str(data.get("overall_status") or "").strip().lower()
@@ -612,7 +704,7 @@ def parse_midjourney(body: str, row: dict[str, Any]) -> dict[str, Any]:
 
 
 def parse_deepinfra(body: str, row: dict[str, Any]) -> dict[str, Any]:
-    data = json.loads(body)
+    data = parse_json(body)
     if not isinstance(data, dict):
         raise ValueError("DeepInfra payload is not an object")
     if not isinstance(data.get("overallStatus"), str):

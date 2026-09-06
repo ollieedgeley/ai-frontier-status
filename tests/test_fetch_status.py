@@ -42,6 +42,58 @@ def read(name: str) -> str:
 
 
 class FetchStatusTests(unittest.TestCase):
+    def test_nuxt_cycles_depth_and_expansion_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "cycle"):
+            FS.deref_nuxt([[0]], 0)
+        deep = [[index + 1] for index in range(40)] + ["leaf"]
+        with self.assertRaisesRegex(ValueError, "complexity"):
+            FS.deref_nuxt(deep, 0)
+        repeated = [[index + 1, index + 1] for index in range(20)] + ["leaf"]
+        with self.assertRaisesRegex(ValueError, "complexity"):
+            FS.deref_nuxt(repeated, 0)
+        # Booleans are values, not integer references into the table.
+        self.assertIs(FS.deref_nuxt(["wrong", "also wrong"], True), True)
+
+    def test_json_complexity_limits(self):
+        cases = [
+            json.dumps([0] * (FS.MAX_COLLECTION_ITEMS + 1)),
+            json.dumps("x" * (FS.MAX_SOURCE_STRING + 1)),
+            "[" * 40 + "0" + "]" * 40,
+            json.dumps([[0] * 100 for _ in range(201)]),
+        ]
+        for body in cases:
+            with self.subTest(length=len(body)), self.assertRaises(ValueError):
+                FS.parse_json(body)
+
+    def test_xml_rejects_entities_and_excessive_structure(self):
+        cases = [
+            '<!DOCTYPE rss [<!ENTITY x "expanded">]><rss>&x;</rss>',
+            "<x>" * 40 + "</x>" * 40,
+            "<rss>" + "<item/>" * (FS.MAX_COLLECTION_ITEMS + 1) + "</rss>",
+        ]
+        for body in cases:
+            with self.subTest(length=len(body)), self.assertRaises(ValueError):
+                FS.parse_xml(body)
+
+    def test_display_limits_preserve_late_outage_classification(self):
+        data = json.loads(read("statuspage-ok.json"))
+        data["components"] = [{"name": "x" * 1000, "status": "operational"}] * 100
+        data["components"].append({"name": "late outage", "status": "major_outage"})
+        data["incidents"] = [{"name": "y" * 1000, "status": "investigating"}] * 100
+        result = FS.parse_statuspage(json.dumps(data), row())
+        self.assertTrue(result["degraded"])
+        self.assertEqual(len(result["components"]), FS.MAX_COMPONENTS)
+        self.assertEqual(len(result["incidents"]), FS.MAX_INCIDENTS)
+        self.assertLessEqual(len(result["incidents"][0]["name"]), FS.MAX_FIELD_CHARS)
+
+    def test_payload_over_limits_becomes_unknown_not_operational(self):
+        data = json.loads(read("statuspage-ok.json"))
+        data["components"] = [None] * (FS.MAX_COLLECTION_ITEMS + 1)
+        with mock.patch.object(FS, "http_get", return_value=(json.dumps(data), "application/json")):
+            result = FS.fetch_company(row())
+        self.assertEqual(result["indicator"], "unknown")
+        self.assertIn("limit", result["error"])
+
     def response(self, body, **headers):
         response = io.BytesIO(body)
         response.headers = Message()

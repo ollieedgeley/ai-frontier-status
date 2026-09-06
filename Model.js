@@ -216,7 +216,7 @@ function normalizeCompany(row) {
   var indicator = cleanText(item.indicator, 40).trim().toLowerCase() || "unknown"
   var incidents = []
   var rawIncidents = asArray(item.incidents)
-  for (var i = 0; i < rawIncidents.length; i++) {
+  for (var i = 0; i < Math.min(rawIncidents.length, 16); i++) {
     var incident = asObject(rawIncidents[i])
     var name = cleanText(incident.name, 180).trim()
     if (!name) continue

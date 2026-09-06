@@ -13,6 +13,11 @@ const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta
 const barWidget = readFileSync(new URL("../BarWidget.qml", import.meta.url), "utf8")
 const panel = readFileSync(new URL("../Panel.qml", import.meta.url), "utf8")
 
+test("remote incident lists are capped before creating UI rows", () => {
+  const company = model.normalizeCompany({incidents: Array.from({length: 1000}, () => ({name: "incident"}))})
+  assert.equal(company.incidents.length, 16)
+})
+
 test("catalog json matches the loader", () => {
   const loaded = model.catalogFromJson(JSON.stringify(catalog))
   assert.equal(loaded.length, catalog.length)
