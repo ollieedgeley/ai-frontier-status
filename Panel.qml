@@ -30,7 +30,8 @@ Panel {
   property bool refreshQueued: false
   property bool settingsOpen: false
 
-  readonly property int refreshIntervalSec: Model.clampRefreshInterval(setting("refreshIntervalSec", 60), 60)
+  readonly property int refreshIntervalSec: Model.clampRefreshInterval(
+    setting("refreshIntervalSec", Model.DEFAULT_REFRESH_SEC), Model.DEFAULT_REFRESH_SEC)
   readonly property var enabledMap: Model.enabledMapFromSettings(root.settings, catalog)
   readonly property var visibleCompanies: Model.visibleCompanies(catalog, reportCompanies, enabledMap)
   readonly property bool unavailable: Model.anyUnavailable(visibleCompanies)
@@ -149,7 +150,7 @@ Panel {
 
   BoundedProcess {
     id: catalogProcess
-    timeoutMs: 5000
+    timeoutMs: Model.CATALOG_WATCHDOG_MS
     command: ["python3", root.fetchScript, "catalog"]
     onCompleted: function(code) {
       if (code !== 0) return

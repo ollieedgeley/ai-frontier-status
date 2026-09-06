@@ -18,8 +18,18 @@ Run from this checkout:
 
 ```sh
 python -m unittest discover -s tests -p 'test_*.py'
-node --test tests/model.test.mjs
+node --test tests/*.test.mjs
 QT_QPA_PLATFORM=offscreen quickshell -p ProcessSecurityTest.qml --no-color
 ```
 
 The Quickshell check must print its PASS message. It exercises actual process timeout, recovery, output limits and failed-launch behavior without loading the desktop panel or changing user settings. Scanner warnings about the panel's qs.Ui/qs.Commons imports are expected in this isolated harness.
+
+These checks use Python's standard-library unittest, Node's built-in test runner and the installed Quickshell executable. They require no pip, npm or other development packages. Plugin installation has no test, build or dependency-install hook; Node is not used by the plugin at runtime.
+
+## Runtime source layout
+
+- `fetch-status` owns the CLI, kernel deadline and concurrent report orchestration.
+- `frontier_status/transport.py` owns URL policy, checked-address TLS connections, redirects and bounded response reads.
+- `frontier_status/parsers.py` validates provider payloads and builds typed result dictionaries. Display details are capped after status classification.
+- `frontier_status/policy.py` names Python's resource limits. `Model.js` holds the view-model limits; regression tests check the cross-language relationships and manifest defaults.
+- `BoundedProcess.qml` owns child lifetime and stream collection. The panel consumes each completion synchronously before allowing another refresh.

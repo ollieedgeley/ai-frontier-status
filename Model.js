@@ -1,5 +1,34 @@
+/**
+ * Pure view-model helpers shared by the panel and settings view.
+ * @typedef {{id:string, name:string, url:string, kind:string, endpoint:string}} CatalogEntry
+ * @typedef {{name:string, status:string}} Incident
+ * @typedef {{id:string, name:string, url:string, indicator:string, label:string,
+ *   degraded:boolean, error:string, incidents:Incident[]}} CompanyResult
+ * @typedef {{ok:boolean, fetchedAt:string, companies:CompanyResult[], error:string}} Report
+ */
+
+var DEFAULT_REFRESH_SEC = 60
+var MIN_REFRESH_SEC = 30
+var MAX_REFRESH_SEC = 3600
+var MAX_INCIDENTS = 16
+var MAX_ID_CHARS = 40
+var MAX_STATUS_CHARS = 40
+var MAX_TIMESTAMP_CHARS = 40
+var MAX_NAME_CHARS = 80
+var MAX_LABEL_CHARS = 180
+var MAX_MODULE_ID_CHARS = 180
+var MAX_ERROR_CHARS = 200
+var MAX_URL_CHARS = 300
+// The watchdog allows the helper's 60-second kernel deadline time to exit.
+var FETCH_WATCHDOG_MS = 65 * 1000
+var CATALOG_WATCHDOG_MS = 5 * 1000
+var MAX_OUTPUT_CHARS = 512 * 1024
+var MAX_ERROR_OUTPUT_CHARS = 4 * 1024
+
+/** Replace display controls before truncation; preserve ordinary Unicode and literal markup. */
 function cleanText(value, maxLength) {
   var text = String(value == null ? "" : value)
+  // Bidirectional overrides and terminal controls can disguise provider messages.
   text = text.replace(/[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, " ")
   if (maxLength && text.length > maxLength) return text.slice(0, maxLength)
   return text
@@ -26,15 +55,15 @@ function catalogFromJson(raw) {
     var out = []
     for (var i = 0; i < rows.length; i++) {
       var row = asObject(rows[i])
-      var id = cleanText(row.id, 40).trim()
-      var name = cleanText(row.name, 80).trim()
+      var id = cleanText(row.id, MAX_ID_CHARS).trim()
+      var name = cleanText(row.name, MAX_NAME_CHARS).trim()
       if (!id || !name) continue
       out.push({
         id: id,
         name: name,
-        url: cleanText(row.url, 300).trim(),
-        kind: cleanText(row.kind, 40).trim(),
-        endpoint: cleanText(row.endpoint, 300).trim()
+        url: cleanText(row.url, MAX_URL_CHARS).trim(),
+        kind: cleanText(row.kind, MAX_ID_CHARS).trim(),
+        endpoint: cleanText(row.endpoint, MAX_URL_CHARS).trim()
       })
     }
     return out
@@ -58,7 +87,7 @@ function parseEnabledIds(raw, catalog) {
     items = asArray(raw)
   }
   for (var i = 0; i < items.length; i++) {
-    var id = cleanText(items[i], 40).trim()
+    var id = cleanText(items[i], MAX_ID_CHARS).trim()
     if (id) enabled[id] = true
   }
   if (catalog && catalog.length) {
@@ -82,6 +111,7 @@ function enabledMapFromLegacyDisabled(raw, catalog) {
   return enabled
 }
 
+/** Explicit enabledIds wins; legacy disabledIds is migrated only when it is absent. */
 function enabledMapFromSettings(settings, catalog) {
   var current = asObject(settings)
   if (hasSetting(current, "enabledIds")) return parseEnabledIds(current.enabledIds, catalog)
@@ -103,7 +133,7 @@ function withCompanyEnabled(enabled, id, on) {
   var next = {}
   var ids = enabledIdList(enabled)
   for (var i = 0; i < ids.length; i++) next[ids[i]] = true
-  var companyId = cleanText(id, 40).trim()
+  var companyId = cleanText(id, MAX_ID_CHARS).trim()
   if (!companyId) return next
   if (on) next[companyId] = true
   else delete next[companyId]
@@ -111,13 +141,13 @@ function withCompanyEnabled(enabled, id, on) {
 }
 
 function widgetSettingsEntry(moduleName, enabled, refreshIntervalSec) {
-  var moduleId = cleanText(moduleName, 180).trim()
+  var moduleId = cleanText(moduleName, MAX_MODULE_ID_CHARS).trim()
   if (moduleId === "") return null
   var ids = typeof enabled === "string" ? enabled : enabledIdList(enabled).join(",")
   return {
     id: moduleId,
     enabledIds: ids,
-    refreshIntervalSec: clampRefreshInterval(refreshIntervalSec, 60)
+    refreshIntervalSec: clampRefreshInterval(refreshIntervalSec, DEFAULT_REFRESH_SEC)
   }
 }
 
@@ -156,33 +186,19 @@ function filterCatalog(catalog, query) {
 
 function clampRefreshInterval(value, fallback) {
   var n = parseInt(value, 10)
-  if (isNaN(n)) n = fallback == null ? 60 : fallback
-  if (n < 30) return 30
-  if (n > 3600) return 3600
+  if (isNaN(n)) n = fallback == null ? DEFAULT_REFRESH_SEC : fallback
+  if (n < MIN_REFRESH_SEC) return MIN_REFRESH_SEC
+  if (n > MAX_REFRESH_SEC) return MAX_REFRESH_SEC
   return n
 }
 
-function settingsWithOverrides(settings, moduleName, overrides) {
-  var moduleId = cleanText(moduleName, 180).trim()
-  if (moduleId === "" || !overrides || typeof overrides !== "object" || Array.isArray(overrides))
-    return null
-
-  var next = { id: moduleId }
-  var current = asObject(settings)
-  for (var key in current) {
-    if (key === "id" || key === "__proto__" || key === "constructor" || key === "prototype")
-      continue
-    next[key] = current[key]
-  }
-  for (var overrideKey in overrides) {
-    if (overrideKey === "id" || overrideKey === "__proto__" || overrideKey === "constructor"
-      || overrideKey === "prototype") continue
-    if (overrides[overrideKey] === null) delete next[overrideKey]
-    else next[overrideKey] = overrides[overrideKey]
-  }
-  return next
-}
-
+/**
+ * Normalize helper output and keep catalog ordering. Malformed JSON returns ok:false.
+ * Individual provider errors remain company results, not whole-report failures.
+ * @param {string|Object} raw
+ * @param {CatalogEntry[]} catalog
+ * @returns {Report}
+ */
 function parseReport(raw, catalog) {
   var empty = { ok: false, fetchedAt: "", companies: [], error: "" }
   try {
@@ -202,9 +218,9 @@ function parseReport(raw, catalog) {
     }
     return {
       ok: data.ok !== false,
-      fetchedAt: cleanText(data.fetchedAt, 40),
+      fetchedAt: cleanText(data.fetchedAt, MAX_TIMESTAMP_CHARS),
       companies: companies,
-      error: cleanText(data.error, 200)
+      error: cleanText(data.error, MAX_ERROR_CHARS)
     }
   } catch (e) {
     empty.error = "Could not parse status report"
@@ -212,28 +228,33 @@ function parseReport(raw, catalog) {
   }
 }
 
+/**
+ * Bound display fields and incidents; QML must still render them as plain text.
+ * @param {Object} row
+ * @returns {CompanyResult}
+ */
 function normalizeCompany(row) {
   var item = asObject(row)
-  var indicator = cleanText(item.indicator, 40).trim().toLowerCase() || "unknown"
+  var indicator = cleanText(item.indicator, MAX_STATUS_CHARS).trim().toLowerCase() || "unknown"
   var incidents = []
   var rawIncidents = asArray(item.incidents)
-  for (var i = 0; i < Math.min(rawIncidents.length, 16); i++) {
+  for (var i = 0; i < Math.min(rawIncidents.length, MAX_INCIDENTS); i++) {
     var incident = asObject(rawIncidents[i])
-    var name = cleanText(incident.name, 180).trim()
+    var name = cleanText(incident.name, MAX_LABEL_CHARS).trim()
     if (!name) continue
     incidents.push({
       name: name,
-      status: cleanText(incident.status, 40).trim().toLowerCase()
+      status: cleanText(incident.status, MAX_STATUS_CHARS).trim().toLowerCase()
     })
   }
   return {
-    id: cleanText(item.id, 40).trim(),
-    name: cleanText(item.name, 80).trim(),
-    url: cleanText(item.url, 300).trim(),
+    id: cleanText(item.id, MAX_ID_CHARS).trim(),
+    name: cleanText(item.name, MAX_NAME_CHARS).trim(),
+    url: cleanText(item.url, MAX_URL_CHARS).trim(),
     indicator: indicator,
-    label: cleanText(item.label, 180).trim() || "Status unknown",
+    label: cleanText(item.label, MAX_LABEL_CHARS).trim() || "Status unknown",
     degraded: item.degraded === true,
-    error: cleanText(item.error, 200).trim(),
+    error: cleanText(item.error, MAX_ERROR_CHARS).trim(),
     incidents: incidents
   }
 }
@@ -312,7 +333,7 @@ function tooltipText(companies) {
 }
 
 function heroMeta(companies, loading, errorText) {
-  if (errorText) return cleanText(errorText, 200)
+  if (errorText) return cleanText(errorText, MAX_ERROR_CHARS)
   if (loading) return "Checking status pages"
   var names = degradedNames(companies)
   var unavailable = unavailableNames(companies)
@@ -334,33 +355,5 @@ function fileUrlToPath(url) {
     return decodeURIComponent(text)
   } catch (e) {
     return text
-  }
-}
-
-if (typeof module !== "undefined") {
-  module.exports = {
-    cleanText: cleanText,
-    catalogFromJson: catalogFromJson,
-    parseEnabledIds: parseEnabledIds,
-    enabledMapFromSettings: enabledMapFromSettings,
-    enabledIdList: enabledIdList,
-    withCompanyEnabled: withCompanyEnabled,
-    widgetSettingsEntry: widgetSettingsEntry,
-    isEnabled: isEnabled,
-    enabledCompanies: enabledCompanies,
-    enabledFetchIds: enabledFetchIds,
-    filterCatalog: filterCatalog,
-    clampRefreshInterval: clampRefreshInterval,
-    settingsWithOverrides: settingsWithOverrides,
-    parseReport: parseReport,
-    normalizeCompany: normalizeCompany,
-    visibleCompanies: visibleCompanies,
-    anyDegraded: anyDegraded,
-    degradedNames: degradedNames,
-    unavailableNames: unavailableNames,
-    anyUnavailable: anyUnavailable,
-    tooltipText: tooltipText,
-    heroMeta: heroMeta,
-    fileUrlToPath: fileUrlToPath
   }
 }

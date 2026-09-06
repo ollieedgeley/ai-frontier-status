@@ -8,7 +8,7 @@ Column {
 
   property var catalog: []
   property var enabledMap: ({})
-  property int refreshIntervalSec: 60
+  property int refreshIntervalSec: Model.DEFAULT_REFRESH_SEC
   property string companyFilter: ""
   property color foreground: Color.foreground
   property string fontFamily: Style.font.family
@@ -16,7 +16,6 @@ Column {
 
   signal companyToggled(string id, bool enabled)
   signal intervalModified(int seconds)
-  signal closeRequested()
 
   spacing: Style.space(12)
 
@@ -24,9 +23,9 @@ Column {
     width: parent.width
     label: "Poll interval (seconds)"
     value: root.refreshIntervalSec
-    from: 30
-    to: 3600
-    stepSize: 30
+    from: Model.MIN_REFRESH_SEC
+    to: Model.MAX_REFRESH_SEC
+    stepSize: Model.MIN_REFRESH_SEC
     foreground: root.foreground
     fontFamily: root.fontFamily
     onModified: function(next) {

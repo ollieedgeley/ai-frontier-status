@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
 import vm from "node:vm"
+import { execFileSync } from "node:child_process"
 
 const source = readFileSync(new URL("../Model.js", import.meta.url), "utf8")
 const model = {}
@@ -12,6 +13,19 @@ const catalog = JSON.parse(readFileSync(new URL("../companies.json", import.meta
 const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"))
 const barWidget = readFileSync(new URL("../BarWidget.qml", import.meta.url), "utf8")
 const panel = readFileSync(new URL("../Panel.qml", import.meta.url), "utf8")
+
+test("shared policies agree across Python, QML and the manifest", () => {
+  const limits = JSON.parse(execFileSync("python3", ["-c",
+    "import json; from frontier_status import policy as p; print(json.dumps([p.MAX_INCIDENTS, p.MAX_OUTPUT_BYTES, p.FETCH_DEADLINE_SEC]))"
+  ], {cwd: new URL("..", import.meta.url), encoding: "utf8"}))
+  assert.equal(model.MAX_INCIDENTS, limits[0])
+  assert.equal(model.MAX_OUTPUT_CHARS, limits[1]) // Helper JSON is ASCII, so bytes equal characters.
+  assert.ok(model.FETCH_WATCHDOG_MS > limits[2] * 1000)
+  const interval = manifest.barWidget.schema.find(field => field.key === "refreshIntervalSec")
+  assert.equal(model.DEFAULT_REFRESH_SEC, interval.defaultValue)
+  assert.equal(model.MIN_REFRESH_SEC, interval.min)
+  assert.equal(model.MAX_REFRESH_SEC, interval.max)
+})
 
 test("remote incident lists are capped before creating UI rows", () => {
   const company = model.normalizeCompany({incidents: Array.from({length: 1000}, () => ({name: "incident"}))})
@@ -130,17 +144,6 @@ test("refresh interval is clamped", () => {
   assert.equal(model.clampRefreshInterval(9000, 60), 3600)
   assert.equal(model.clampRefreshInterval("90", 60), 90)
   assert.equal(model.clampRefreshInterval("nope", 60), 60)
-})
-
-test("settings overrides keep unrelated keys", () => {
-  const next = model.settingsWithOverrides(
-    { refreshIntervalSec: 60, extra: true },
-    "io.github.ollieedgeley.ai-frontier-status",
-    { refreshIntervalSec: 120 }
-  )
-  assert.equal(next.id, "io.github.ollieedgeley.ai-frontier-status")
-  assert.equal(next.refreshIntervalSec, 120)
-  assert.equal(next.extra, true)
 })
 
 test("visible companies sort degraded first and fill waiting rows", () => {

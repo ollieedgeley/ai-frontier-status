@@ -1,16 +1,19 @@
 import QtQuick
 import Quickshell.Io
+import "Model.js" as Model
 
 Process {
   id: root
-  property int timeoutMs: 65000
-  property int maxOutputChars: 524288
-  property int maxErrorChars: 4096
+  property int timeoutMs: Model.FETCH_WATCHDOG_MS
+  property int maxOutputChars: Model.MAX_OUTPUT_CHARS
+  property int maxErrorChars: Model.MAX_ERROR_OUTPUT_CHARS
+  readonly property int killSignal: 9 // Linux SIGKILL also stops blocked worker threads.
+  readonly property int failedExitCode: -1
   property string output: ""
   property string errorOutput: ""
   property string failure: ""
   property bool pending: false
-  property int resultCode: -1
+  property int resultCode: failedExitCode
   signal completed(int code)
 
   function launch() {
@@ -18,7 +21,7 @@ Process {
     output = ""
     errorOutput = ""
     failure = ""
-    resultCode = -1
+    resultCode = failedExitCode
     pending = true
     watchdog.restart()
     running = true
@@ -27,7 +30,7 @@ Process {
   function abort(message) {
     if (!pending) return
     failure = message
-    signal(9)
+    signal(killSignal)
     Qt.callLater(settle)
   }
 
@@ -36,7 +39,7 @@ Process {
     if (!pending || running) return
     watchdog.stop()
     pending = false
-    completed(failure ? -1 : resultCode)
+    completed(failure ? failedExitCode : resultCode)
   }
 
   function collect(data, isError) {
