@@ -18,7 +18,7 @@ from .policy import (
     HTTP_READ_CHUNK_BYTES,
 )
 
-USER_AGENT = "ai-frontier-status/1.0.0 (Omarchy plugin; +https://github.com/ollieedgeley/ai-frontier-status)"
+USER_AGENT = "ai-frontier-status/1.0.1 (Omarchy plugin; +https://github.com/ollieedgeley/ai-frontier-status)"
 
 def validate_url(url: str, allowed_host: str | None = None) -> urllib.parse.SplitResult:
     if len(url) > MAX_URL_CHARS or any(ord(char) <= 32 or ord(char) >= 127 for char in url) or "\\" in url:
