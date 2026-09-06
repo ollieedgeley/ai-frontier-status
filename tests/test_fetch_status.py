@@ -96,6 +96,7 @@ class FetchStatusTests(unittest.TestCase):
 
     def response(self, body, **headers):
         response = io.BytesIO(body)
+        response.status = 200
         response.headers = Message()
         for key, value in headers.items():
             response.headers[key.replace("_", "-")] = str(value)
@@ -105,24 +106,85 @@ class FetchStatusTests(unittest.TestCase):
         for headers in ({}, {"Content_Length": 1}, {"Content_Length": 17}):
             with self.subTest(headers=headers), mock.patch.object(FS, "MAX_RESPONSE_BYTES", 16):
                 response = self.response(b"x" * 17, **headers)
-                with mock.patch.object(FS.urllib.request, "urlopen", return_value=response):
+                with mock.patch.object(FS, "open_https", return_value=response):
                     with self.assertRaisesRegex(ValueError, "byte limit"):
                         FS.http_get("https://example.test")
 
     def test_http_body_at_limit_and_compression_rejected(self):
         with mock.patch.object(FS, "MAX_RESPONSE_BYTES", 16):
-            with mock.patch.object(FS.urllib.request, "urlopen", return_value=self.response(b"x" * 16)):
+            with mock.patch.object(FS, "open_https", return_value=self.response(b"x" * 16)):
                 self.assertEqual(FS.http_get("https://example.test")[0], "x" * 16)
-        with mock.patch.object(FS.urllib.request, "urlopen", return_value=self.response(b"x", Content_Encoding="gzip")):
+        with mock.patch.object(FS, "open_https", return_value=self.response(b"x", Content_Encoding="gzip")):
             with self.assertRaisesRegex(ValueError, "Compressed"):
                 FS.http_get("https://example.test")
 
     def test_http_trickle_exceeds_elapsed_deadline(self):
         response = self.response(b"x")
-        with mock.patch.object(FS.urllib.request, "urlopen", return_value=response), \
+        with mock.patch.object(FS, "open_https", return_value=response), \
              mock.patch.object(FS.time, "monotonic", side_effect=[0, 1, 9]):
             with self.assertRaises(TimeoutError):
                 FS.http_get("https://example.test", timeout=8)
+
+    def test_redirects_stay_on_original_https_host(self):
+        for destination in ["http://example.test/path", "https://other.test/path", "https://127.0.0.1/",
+                            "https://[::1]/", "https://example.test@other.test/", "https://example.test:444/",
+                            "https://example.test./", "https://example.test/\npath", "file:///etc/passwd"]:
+            response = self.response(b"", Location=destination)
+            response.status = 302
+            with self.subTest(destination=destination), mock.patch.object(FS, "open_https", return_value=response) as opener:
+                with self.assertRaises(ValueError):
+                    FS.http_get("https://example.test/start")
+                self.assertEqual(opener.call_count, 1)
+
+    def test_same_host_redirect_succeeds_and_chain_is_bounded(self):
+        redirect = self.response(b"", Location="/final")
+        redirect.status = 302
+        with mock.patch.object(FS, "open_https", side_effect=[redirect, self.response(b"ok")]) as opener:
+            self.assertEqual(FS.http_get("https://example.test/start")[0], "ok")
+            self.assertEqual(opener.call_args.args[0], "https://example.test/final")
+        responses = [self.response(b"", Location="/again") for _ in range(4)]
+        for response in responses:
+            response.status = 302
+        with mock.patch.object(FS, "open_https", side_effect=responses) as opener:
+            with self.assertRaisesRegex(ValueError, "redirect limit"):
+                FS.http_get("https://example.test/start")
+            self.assertEqual(opener.call_count, 4)
+
+    def test_private_and_transition_addresses_are_rejected(self):
+        for address in ["127.0.0.1", "10.0.0.1", "172.16.0.1", "192.168.0.1", "169.254.169.254",
+                        "100.64.0.1", "0.0.0.0", "224.0.0.1", "::1", "::", "fc00::1", "fe80::1",
+                        "ff02::1", "::ffff:127.0.0.1", "2002:7f00:1::", "64:ff9b::7f00:1"]:
+            with self.subTest(address=address):
+                self.assertFalse(FS.public_address(address))
+        self.assertTrue(FS.public_address("1.1.1.1"))
+        self.assertTrue(FS.public_address("2606:4700:4700::1111"))
+
+    def test_connection_uses_checked_ip_and_original_tls_hostname(self):
+        addresses = [(FS.socket.AF_INET, FS.socket.SOCK_STREAM, 6, "", ("1.1.1.1", 443))]
+        context = mock.Mock()
+        with mock.patch.object(FS.ssl, "create_default_context", return_value=context), \
+             mock.patch.object(FS.socket, "getaddrinfo", return_value=addresses) as dns, \
+             mock.patch.object(FS.socket, "socket") as socket_factory:
+            connection = FS.PublicHTTPSConnection("example.test", FS.time.monotonic() + 8)
+            connection.connect()
+            dns.assert_called_once_with("example.test", 443, type=FS.socket.SOCK_STREAM)
+            socket_factory.return_value.connect.assert_called_once_with(("1.1.1.1", 443))
+            context.wrap_socket.assert_called_once_with(socket_factory.return_value, server_hostname="example.test")
+
+    def test_mixed_public_private_dns_is_rejected_before_connect(self):
+        addresses = [(FS.socket.AF_INET, FS.socket.SOCK_STREAM, 6, "", (ip, 443))
+                     for ip in ("1.1.1.1", "127.0.0.1")]
+        with mock.patch.object(FS.socket, "getaddrinfo", return_value=addresses), \
+             mock.patch.object(FS.socket, "socket") as socket_factory:
+            connection = FS.PublicHTTPSConnection("example.test", FS.time.monotonic() + 8)
+            with self.assertRaisesRegex(ValueError, "non-public"):
+                connection.connect()
+            socket_factory.assert_not_called()
+
+    def test_catalog_endpoints_have_canonical_https_hosts(self):
+        for company in FS.load_catalog():
+            with self.subTest(company=company["id"]):
+                FS.validate_url(company["endpoint"])
 
     def test_output_limit_emits_no_partial_json(self):
         output = io.StringIO()

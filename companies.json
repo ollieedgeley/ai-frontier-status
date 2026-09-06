@@ -11,7 +11,7 @@
     "name": "Anthropic",
     "url": "https://status.claude.com",
     "kind": "statuspage",
-    "endpoint": "https://status.anthropic.com/api/v2/summary.json"
+    "endpoint": "https://status.claude.com/api/v2/summary.json"
   },
   {
     "id": "google",
@@ -241,9 +241,9 @@
   {
     "id": "lambda",
     "name": "Lambda",
-    "url": "https://status.lambdalabs.com",
+    "url": "https://status.lambda.ai",
     "kind": "statuspage",
-    "endpoint": "https://status.lambdalabs.com/api/v2/summary.json"
+    "endpoint": "https://status.lambda.ai/api/v2/summary.json"
   },
   {
     "id": "nebius",
@@ -360,9 +360,9 @@
   {
     "id": "recraft",
     "name": "Recraft",
-    "url": "https://status.recraft.ai",
+    "url": "https://recraft.instatus.com",
     "kind": "instatus",
-    "endpoint": "https://status.recraft.ai/api/v2/summary.json"
+    "endpoint": "https://recraft.instatus.com/api/v2/summary.json"
   },
   {
     "id": "grammarly",
