@@ -10,6 +10,8 @@ The helper uses at most eight threads and a kernel-enforced 60-second process de
 
 Settings are saved through Omarchy's standard settings API. The plugin has no installer, self-updater, privileged operation, credential storage or third-party Python dependency. Provider changes can require catalog/parser maintenance; a successful fetch does not guarantee a provider's report is accurate.
 
+Provider names and remote status text are rendered with QML's plain-text mode. Display normalization bounds strings and replaces control and bidirectional override/isolation characters. Remote markup is displayed literally rather than interpreted as formatting or resource references.
+
 ## Regression checks
 
 Run from this checkout:

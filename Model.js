@@ -1,5 +1,6 @@
 function cleanText(value, maxLength) {
   var text = String(value == null ? "" : value)
+  text = text.replace(/[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, " ")
   if (maxLength && text.length > maxLength) return text.slice(0, maxLength)
   return text
 }
@@ -311,7 +312,7 @@ function tooltipText(companies) {
 }
 
 function heroMeta(companies, loading, errorText) {
-  if (errorText) return errorText
+  if (errorText) return cleanText(errorText, 200)
   if (loading) return "Checking status pages"
   var names = degradedNames(companies)
   var unavailable = unavailableNames(companies)

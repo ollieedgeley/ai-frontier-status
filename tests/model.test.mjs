@@ -18,6 +18,25 @@ test("remote incident lists are capped before creating UI rows", () => {
   assert.equal(company.incidents.length, 16)
 })
 
+test("remote markup remains literal and control characters are removed", () => {
+  const markup = '<b>Outage</b><img src="https://example.test/tracker">'
+  const parsed = model.parseReport(JSON.stringify({ok: true, companies: [{
+    id: "openai", label: markup, error: "error\u001b\u202e!", incidents: [{name: markup + "\u0000\n"}]
+  }]}), catalog)
+  assert.equal(parsed.companies[0].label, markup)
+  assert.equal(parsed.companies[0].incidents[0].name, markup)
+  assert.equal(parsed.companies[0].error, "error  !")
+  assert.equal(model.cleanText("x".repeat(1000), 180).length, 180)
+  assert.equal(model.cleanText("障害が発生しました", 180), "障害が発生しました")
+  assert.equal(model.heroMeta([], false, "error\u202e"), "error ")
+})
+
+test("provider name and remote status QML sinks explicitly render plain text", () => {
+  const sinks = [...panel.matchAll(/Text\s*\{[^{}]*text:\s*modelData\.(?:name|error)[^{}]*\}/g)]
+  assert.equal(sinks.length, 2)
+  for (const [sink] of sinks) assert.match(sink, /textFormat:\s*Text\.PlainText/)
+})
+
 test("catalog json matches the loader", () => {
   const loaded = model.catalogFromJson(JSON.stringify(catalog))
   assert.equal(loaded.length, catalog.length)

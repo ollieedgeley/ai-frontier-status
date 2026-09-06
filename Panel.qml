@@ -342,6 +342,7 @@ Panel {
 
                   Text {
                     width: parent.width
+                    textFormat: Text.PlainText
                     text: modelData.name
                     color: root.foreground
                     font.family: root.fontFamily
@@ -352,6 +353,7 @@ Panel {
 
                   Text {
                     width: parent.width
+                    textFormat: Text.PlainText
                     text: modelData.error
                       ? modelData.error
                       : (modelData.incidents && modelData.incidents.length
