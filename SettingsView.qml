@@ -16,6 +16,12 @@ Column {
 
   signal companyToggled(string id, bool enabled)
   signal intervalModified(int seconds)
+  signal closeRequested()
+
+  Keys.onEscapePressed: function(event) {
+    root.closeRequested()
+    event.accepted = true
+  }
 
   spacing: Style.space(12)
 

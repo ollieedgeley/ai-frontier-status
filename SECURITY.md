@@ -20,11 +20,14 @@ Run from this checkout:
 python -m unittest discover -s tests -p 'test_*.py'
 node --test tests/*.test.mjs
 QT_QPA_PLATFORM=offscreen quickshell -p ProcessSecurityTest.qml --no-color
+python tests/check-panel-runtime.py
 ```
 
 The Quickshell check must print its PASS message. It exercises actual process timeout, recovery, output limits and failed-launch behavior without loading the desktop panel or changing user settings. Scanner warnings about the panel's qs.Ui/qs.Commons imports are expected in this isolated harness.
 
 These checks use Python's standard-library unittest, Node's built-in test runner and the installed Quickshell executable. They require no pip, npm or other development packages. Plugin installation has no test, build or dependency-install hook; Node is not used by the plugin at runtime.
+
+The panel runtime check requires a running Wayland session and the installed Omarchy shell components. It loads a temporary copy of the plugin, checks that the bar widget creates its panel, and exercises opening and closing settings. It leaves the popup hidden and does not change the installed plugin or user settings. It does not simulate keyboard or mouse input.
 
 ## Runtime source layout
 
