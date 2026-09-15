@@ -1,6 +1,6 @@
 # Ai Frontier Status
 
-[![Follow on X](https://img.shields.io/badge/Follow_on_X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/OllieEdgeley) [![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-5F7FFF?style=for-the-badge&logo=buymeacoffee&logoColor=white)](https://buymeacoffee.com/ollieedgeley) [![Support via PayPal](https://img.shields.io/badge/PayPal-003087?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.biz/ollieedgeley)
+[![Follow on X](https://img.shields.io/badge/Follow_on_X-343A40?style=flat-square&logo=x&logoColor=white)](https://x.com/OllieEdgeley) [![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-343A40?style=flat-square&logo=buymeacoffee&logoColor=white)](https://buymeacoffee.com/ollieedgeley) [![Support via PayPal](https://img.shields.io/badge/PayPal-343A40?style=flat-square&logo=paypal&logoColor=white)](https://www.paypal.biz/ollieedgeley)
 
 A lightning bolt on your Omarchy bar that watches official AI status pages. It goes red when something you enabled is having a bad day.
 
