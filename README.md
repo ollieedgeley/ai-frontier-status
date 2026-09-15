@@ -1,8 +1,21 @@
-# Ai Frontier Status
+<h1 align="center">AI Frontier Status</h1>
 
-[![Follow on X](https://img.shields.io/badge/Follow_on_X-343A40?style=flat-square&logo=x&logoColor=white)](https://x.com/OllieEdgeley) [![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-343A40?style=flat-square&logo=buymeacoffee&logoColor=white)](https://buymeacoffee.com/ollieedgeley) [![Support via PayPal](https://img.shields.io/badge/PayPal-343A40?style=flat-square&logo=paypal&logoColor=white)](https://www.paypal.biz/ollieedgeley)
+<p align="center">
+  <strong>A lightning bolt on your Omarchy bar that watches official AI status pages.</strong><br>
+  It goes red when something you enabled is having a bad day.
+</p>
 
-A lightning bolt on your Omarchy bar that watches official AI status pages. It goes red when something you enabled is having a bad day.
+<p align="center">
+  <a href="https://x.com/OllieEdgeley"><img src="https://img.shields.io/badge/Follow_on_X-000000?style=for-the-badge&amp;logo=x&amp;logoColor=white" alt="Follow on X"></a>
+  <a href="https://buymeacoffee.com/ollieedgeley"><img src="https://img.shields.io/badge/Buy_me_a_coffee-5F7FFF?style=for-the-badge&amp;logo=buymeacoffee&amp;logoColor=white" alt="Buy me a coffee"></a>
+  <a href="https://www.paypal.biz/ollieedgeley"><img src="https://img.shields.io/badge/PayPal-003087?style=for-the-badge&amp;logo=paypal&amp;logoColor=white" alt="Support via PayPal"></a>
+</p>
+
+<p align="center">
+  <a href="#-install">Install</a> &nbsp;·&nbsp;
+  <a href="#-pick-your-roster">56 companies</a> &nbsp;·&nbsp;
+  <a href="#%EF%B8%8F-controls">Controls</a>
+</p>
 
 <p align="center">
   <img src="preview.png" alt="Frontier Status panel with Anthropic, DeepSeek, Google, OpenAI, and xAI all operational">
