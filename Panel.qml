@@ -60,8 +60,14 @@ Panel {
     return false
   }
 
-  function openSettings() { settingsOpen = true }
-  function closeSettings() { settingsOpen = false }
+  function openSettings() {
+    settingsOpen = true
+    settingsView.forceActiveFocus()
+  }
+  function closeSettings() {
+    settingsOpen = false
+    keyCatcher.forceActiveFocus()
+  }
 
   function persistWidgetSettings(values) {
     var enabledIds = values && values.enabledIds !== undefined
@@ -277,6 +283,7 @@ Panel {
           }
 
           SettingsView {
+            id: settingsView
             visible: root.settingsOpen
             width: parent.width
             catalog: root.catalog
