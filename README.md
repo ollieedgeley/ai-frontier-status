@@ -43,6 +43,14 @@ omarchy plugin add https://github.com/ollieedgeley/ai-frontier-status.git --enab
 omarchy plugin remove io.github.ollieedgeley.ai-frontier-status
 ```
 
+## ☕ Say hi or buy me a coffee
+
+Find me on X. If this little bolt earns its keep, coffee is always welcome.
+
+[![Follow on X](https://img.shields.io/badge/Follow_on_X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/OllieEdgeley)
+[![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-5F7FFF?style=for-the-badge&logo=buymeacoffee&logoColor=white)](https://buymeacoffee.com/ollieedgeley)
+[![Support via PayPal](https://img.shields.io/badge/PayPal-003087?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.biz/ollieedgeley)
+
 ## ⚖️ License
 
 [MIT](LICENSE) © 2026 Ollie Edgeley
