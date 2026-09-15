@@ -3,7 +3,7 @@
 A lightning bolt on your Omarchy bar that watches official AI status pages. It goes red when something you enabled is having a bad day.
 
 <p align="center">
-  <img src="docs/images/status-panel.png" width="390" alt="Frontier Status panel showing Anthropic, OpenAI, and xAI operational">
+  <img src="preview.png" alt="Frontier Status panel with Anthropic, DeepSeek, Google, OpenAI, and xAI all operational">
 </p>
 
 ## ⚡ What it does
@@ -14,6 +14,10 @@ A lightning bolt on your Omarchy bar that watches official AI status pages. It g
 - ⏱️ One interval for everyone, 30 seconds to an hour
 
 Every company starts off. Open settings and pick your roster. Official feeds only, no crowd-sourced "is it down" noise.
+
+<p align="center">
+  <img src="docs/images/status-panel.png" width="390" alt="Frontier Status panel showing Anthropic, OpenAI, and xAI operational">
+</p>
 
 ## 🏢 Pick your roster
 
