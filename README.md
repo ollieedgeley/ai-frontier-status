@@ -30,16 +30,6 @@
 
 Every company starts off. Open settings and pick your roster. Official feeds only, no crowd-sourced "is it down" noise.
 
-<p align="center">
-  <img src="docs/images/status-panel.png" width="390" alt="Frontier Status panel showing Anthropic, OpenAI, and xAI operational">
-</p>
-
-## 🏢 Pick your roster
-
-56 companies, all off until you pick them.
-
-AI21 · Anthropic · AssemblyAI · Baseten · Bolt · Cerebras · Cohere · Cursor · Deepgram · DeepInfra · DeepSeek · Descript · Devin · ElevenLabs · Fal · Fireworks · GitHub Copilot · Google · Grammarly · Groq · HeyGen · Hugging Face · Hume · Ideogram · Jina · Lambda · Lovable · Luma · Midjourney · MiniMax · Mistral · Modal · Moonshot · Nebius · Novita · Nscale · OpenAI · OpenRouter · Otter · Perplexity · Pinecone · Poe · Qdrant · Recraft · Replicate · Runway · SambaNova · Scale AI · Sourcegraph · Stability AI · Synthesia · Tabnine · Together · Warp · xAI · Zed
-
 ## 🚀 Install
 
 ```sh
@@ -52,9 +42,22 @@ omarchy plugin add https://github.com/ollieedgeley/ai-frontier-status.git --enab
 - 🔄 `r` to refresh
 - ⎋ Esc to close
 
-<p align="center">
-  <img src="docs/images/settings-panel.png" width="390" alt="Settings panel with poll interval, company filter, and individual company toggles">
-</p>
+<table>
+  <tr>
+    <th>Main panel</th>
+    <th>Settings</th>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/images/status-panel.png" alt="Frontier Status panel showing Anthropic, OpenAI, and xAI operational"></td>
+    <td width="50%" valign="top"><img src="docs/images/settings-panel.png" alt="Settings panel with poll interval, company filter, and individual company toggles"></td>
+  </tr>
+</table>
+
+## 🏢 Pick your roster
+
+56 companies, all off until you pick them.
+
+AI21 · Anthropic · AssemblyAI · Baseten · Bolt · Cerebras · Cohere · Cursor · Deepgram · DeepInfra · DeepSeek · Descript · Devin · ElevenLabs · Fal · Fireworks · GitHub Copilot · Google · Grammarly · Groq · HeyGen · Hugging Face · Hume · Ideogram · Jina · Lambda · Lovable · Luma · Midjourney · MiniMax · Mistral · Modal · Moonshot · Nebius · Novita · Nscale · OpenAI · OpenRouter · Otter · Perplexity · Pinecone · Poe · Qdrant · Recraft · Replicate · Runway · SambaNova · Scale AI · Sourcegraph · Stability AI · Synthesia · Tabnine · Together · Warp · xAI · Zed
 
 ## 🗑️ Remove
 
