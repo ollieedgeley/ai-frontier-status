@@ -7,6 +7,8 @@
  * @typedef {{ok:boolean, fetchedAt:string, companies:CompanyResult[], error:string}} Report
  */
 
+var STARTUP_GRACE_MS = 30 * 1000
+var STARTUP_RETRY_MS = 5 * 1000
 var DEFAULT_REFRESH_SEC = 60
 var MIN_REFRESH_SEC = 30
 var MAX_REFRESH_SEC = 3600

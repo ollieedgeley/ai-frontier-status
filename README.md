@@ -25,6 +25,7 @@
 
 - 📡 Polls only the companies you turn on
 - 🔴 Turns the bar icon red when one of them degrades
+- 🌐 Shows “Connecting…” and retries initial failed checks for up to 30 seconds while networking starts; confirmed outages still turn red immediately
 - 🖱️ Click a row to open that vendor's own status page
 - ⏱️ One interval for everyone, 30 seconds to an hour
 

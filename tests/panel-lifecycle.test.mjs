@@ -14,6 +14,8 @@ test("completion consumes its result before the next refresh can reset it", () =
     Model: model, Qt: { callLater: callback => scheduled.push(callback) },
     catalog: [{id: "openai", name: "OpenAI"}], enabledFetchIds: ["openai"],
     fetchScript: "/plugin/fetch-status", loading: true, refreshQueued: false,
+    startupAttempted: true, startupGraceActive: false,
+    startupRetry: { stop() {} },
     reportCompanies: [], loadError: "", commandStdout: "", commandStderr: "", lastExitCode: 0,
     fetchProcess: {
       output: JSON.stringify({ok: true, companies: [{id: "openai", label: "First result"}]}),
