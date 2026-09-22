@@ -57,6 +57,16 @@ test("catalog json matches the loader", () => {
   assert.equal(loaded.map((row) => row.id).join(","), catalog.map((row) => row.id).join(","))
 })
 
+test("TypeSafe is opt-in and can be selected without changing existing selections", () => {
+  assert.equal(catalog.length, 57)
+  assert.equal(model.isEnabled("typesafe", model.parseEnabledIds("openai", catalog)), false)
+  const enabled = model.parseEnabledIds("openai,typesafe", catalog)
+  assert.equal(model.isEnabled("typesafe", enabled), true)
+  assert.equal(model.enabledIdList(enabled).join(","), "openai,typesafe")
+  const loaded = model.catalogFromJson(JSON.stringify(catalog))
+  assert.equal(loaded.find(row => row.id === "typesafe").name, "TypeSafe")
+})
+
 test("manifest points at the bar entry and settings keys", () => {
   assert.equal(manifest.id, "io.github.ollieedgeley.ai-frontier-status")
   assert.deepEqual(manifest.kinds, ["bar-widget"])

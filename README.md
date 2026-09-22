@@ -13,7 +13,7 @@
 
 <p align="center">
   <a href="#-install">Install</a> &nbsp;·&nbsp;
-  <a href="#-pick-your-roster">56 companies</a> &nbsp;·&nbsp;
+  <a href="#-pick-your-roster">57 companies</a> &nbsp;·&nbsp;
   <a href="#%EF%B8%8F-controls">Controls</a>
 </p>
 
@@ -55,9 +55,9 @@ omarchy plugin add https://github.com/ollieedgeley/ai-frontier-status.git --enab
 
 ## 🏢 Pick your roster
 
-56 companies, all off until you pick them.
+57 companies, all off until you pick them.
 
-AI21 · Anthropic · AssemblyAI · Baseten · Bolt · Cerebras · Cohere · Cursor · Deepgram · DeepInfra · DeepSeek · Descript · Devin · ElevenLabs · Fal · Fireworks · GitHub Copilot · Google · Grammarly · Groq · HeyGen · Hugging Face · Hume · Ideogram · Jina · Lambda · Lovable · Luma · Midjourney · MiniMax · Mistral · Modal · Moonshot · Nebius · Novita · Nscale · OpenAI · OpenRouter · Otter · Perplexity · Pinecone · Poe · Qdrant · Recraft · Replicate · Runway · SambaNova · Scale AI · Sourcegraph · Stability AI · Synthesia · Tabnine · Together · Warp · xAI · Zed
+AI21 · Anthropic · AssemblyAI · Baseten · Bolt · Cerebras · Cohere · Cursor · Deepgram · DeepInfra · DeepSeek · Descript · Devin · ElevenLabs · Fal · Fireworks · GitHub Copilot · Google · Grammarly · Groq · HeyGen · Hugging Face · Hume · Ideogram · Jina · Lambda · Lovable · Luma · Midjourney · MiniMax · Mistral · Modal · Moonshot · Nebius · Novita · Nscale · OpenAI · OpenRouter · Otter · Perplexity · Pinecone · Poe · Qdrant · Recraft · Replicate · Runway · SambaNova · Scale AI · Sourcegraph · Stability AI · Synthesia · Tabnine · Together · TypeSafe · Warp · xAI · Zed
 
 ## 🗑️ Remove
 
