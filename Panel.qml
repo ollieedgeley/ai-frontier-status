@@ -29,19 +29,25 @@ Panel {
   property bool loading: false
   property bool refreshQueued: false
   property bool settingsOpen: false
+  property bool startupAttempted: false
+  property bool startupGraceActive: false
+  readonly property bool startupConnecting: startupGraceActive && enabledFetchIds.length > 0
 
   readonly property int refreshIntervalSec: Model.clampRefreshInterval(
     setting("refreshIntervalSec", Model.DEFAULT_REFRESH_SEC), Model.DEFAULT_REFRESH_SEC)
   readonly property var enabledMap: Model.enabledMapFromSettings(root.settings, catalog)
   readonly property var visibleCompanies: Model.visibleCompanies(catalog, reportCompanies, enabledMap)
   readonly property bool unavailable: Model.anyUnavailable(visibleCompanies)
-  readonly property bool alarming: !loading && (Model.anyDegraded(visibleCompanies) || unavailable)
-  readonly property string tooltipText: Model.tooltipText(visibleCompanies)
+  // Retain confirmed outages during refresh; only initial unavailable checks get grace.
+  readonly property bool alarming: Model.anyDegraded(visibleCompanies)
+    || (!startupConnecting && (unavailable || loadError !== ""))
+  readonly property string tooltipText: startupConnecting && !Model.anyDegraded(visibleCompanies)
+    ? "Connecting…" : Model.tooltipText(visibleCompanies)
   readonly property var enabledFetchIds: Model.enabledFetchIds(catalog, enabledMap)
 
   function open() {
     root.controller.show()
-    if (visibleCompanies.length === 0 || loadError !== "") refresh()
+    if (visibleCompanies.length === 0 || loadError !== "" || unavailable) refresh()
   }
 
   function close() {
@@ -109,6 +115,12 @@ Panel {
       loading = false
       return
     }
+    startupRetry.stop()
+    if (!startupAttempted) {
+      startupAttempted = true
+      startupGraceActive = true
+      startupDeadline.start()
+    }
     refreshQueued = false
     loading = true
     fetchProcess.command = ["python3", fetchScript, "fetch", "--enabled", enabledFetchIds.join(",")]
@@ -125,6 +137,15 @@ Panel {
       loadError = ""
     }
     loading = false
+    if (startupGraceActive) {
+      if (loadError === "" && !unavailable && reportCompanies.length >= enabledFetchIds.length) {
+        startupGraceActive = false
+        startupDeadline.stop()
+        startupRetry.stop()
+      } else {
+        startupRetry.restart()
+      }
+    }
     if (refreshQueued) Qt.callLater(refresh)
   }
 
@@ -136,7 +157,7 @@ Panel {
 
   function indicatorColor(company) {
     if (!company) return dim
-    if (company.degraded || company.error) return urgent
+    if (company.degraded || (company.error && !startupConnecting)) return urgent
     return foreground
   }
 
@@ -175,6 +196,21 @@ Panel {
     repeat: true
     triggeredOnStart: true
     onTriggered: root.refresh()
+  }
+
+  Timer {
+    id: startupDeadline
+    interval: Model.STARTUP_GRACE_MS
+    onTriggered: {
+      root.startupGraceActive = false
+      startupRetry.stop()
+    }
+  }
+
+  Timer {
+    id: startupRetry
+    interval: Model.STARTUP_RETRY_MS
+    onTriggered: if (root.startupGraceActive && root.enabledFetchIds.length) root.refresh()
   }
 
   IpcHandler {
@@ -244,7 +280,8 @@ Panel {
             title: root.settingsOpen ? "Settings" : "Frontier status"
             meta: root.settingsOpen
               ? "Companies and poll interval"
-              : Model.heroMeta(root.visibleCompanies, root.loading, root.loadError)
+              : (root.startupConnecting && !Model.anyDegraded(root.visibleCompanies)
+                ? "Connecting…" : Model.heroMeta(root.visibleCompanies, root.loading, root.loadError))
             foreground: root.foreground
             fontFamily: root.fontFamily
 
@@ -354,7 +391,7 @@ Panel {
                     width: parent.width
                     textFormat: Text.PlainText
                     text: modelData.error
-                      ? modelData.error
+                      ? (root.startupConnecting && !modelData.degraded ? "Connecting…" : modelData.error)
                       : (modelData.incidents && modelData.incidents.length
                         ? modelData.incidents[0].name
                         : modelData.label)

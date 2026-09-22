@@ -386,6 +386,13 @@
     "endpoint": "https://status.jina.ai/api/v2/summary.json"
   },
   {
+    "id": "typesafe",
+    "name": "TypeSafe",
+    "url": "https://status.typesafe.ai/",
+    "kind": "betterstack",
+    "endpoint": "https://status.typesafe.ai/index.json"
+  },
+  {
     "id": "qdrant",
     "name": "Qdrant",
     "url": "https://status.qdrant.io",

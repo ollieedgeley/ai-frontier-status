@@ -7,6 +7,8 @@
  * @typedef {{ok:boolean, fetchedAt:string, companies:CompanyResult[], error:string}} Report
  */
 
+var STARTUP_GRACE_MS = 30 * 1000
+var STARTUP_RETRY_MS = 5 * 1000
 var DEFAULT_REFRESH_SEC = 60
 var MIN_REFRESH_SEC = 30
 var MAX_REFRESH_SEC = 3600
@@ -100,13 +102,18 @@ function parseEnabledIds(raw, catalog) {
   return enabled
 }
 
+// Freeze the pre-v1.0.3 roster: disabledIds cannot express consent to future providers.
+// Do not add new providers here; explicit enabledIds handles all later selections.
+var LEGACY_PROVIDER_IDS = "openai,anthropic,google,xai,mistral,deepseek,moonshot,cohere,minimax,ai21,stability,scale,copilot,cursor,devin,warp,zed,tabnine,sourcegraph,lovable,bolt,groq,fireworks,together,huggingface,cerebras,sambanova,replicate,fal,baseten,modal,novita,openrouter,deepinfra,lambda,nebius,nscale,perplexity,poe,elevenlabs,deepgram,assemblyai,hume,otter,descript,runway,luma,heygen,synthesia,ideogram,midjourney,recraft,grammarly,pinecone,jina,qdrant"
+
 function enabledMapFromLegacyDisabled(raw, catalog) {
+  var legacy = parseEnabledIds(LEGACY_PROVIDER_IDS, catalog)
   var disabled = parseEnabledIds(raw, catalog)
   var rows = asArray(catalog)
   var enabled = {}
   for (var i = 0; i < rows.length; i++) {
     var id = rows[i] && rows[i].id
-    if (id && disabled[id] !== true) enabled[id] = true
+    if (id && legacy[id] === true && disabled[id] !== true) enabled[id] = true
   }
   return enabled
 }

@@ -57,6 +57,16 @@ test("catalog json matches the loader", () => {
   assert.equal(loaded.map((row) => row.id).join(","), catalog.map((row) => row.id).join(","))
 })
 
+test("TypeSafe is opt-in and can be selected without changing existing selections", () => {
+  assert.equal(catalog.length, 57)
+  assert.equal(model.isEnabled("typesafe", model.parseEnabledIds("openai", catalog)), false)
+  const enabled = model.parseEnabledIds("openai,typesafe", catalog)
+  assert.equal(model.isEnabled("typesafe", enabled), true)
+  assert.equal(model.enabledIdList(enabled).join(","), "openai,typesafe")
+  const loaded = model.catalogFromJson(JSON.stringify(catalog))
+  assert.equal(loaded.find(row => row.id === "typesafe").name, "TypeSafe")
+})
+
 test("manifest points at the bar entry and settings keys", () => {
   assert.equal(manifest.id, "io.github.ollieedgeley.ai-frontier-status")
   assert.deepEqual(manifest.kinds, ["bar-widget"])
@@ -113,6 +123,21 @@ test("empty enabledIds is explicit none even if disabledIds still lists everyone
 test("missing both keys means none enabled", () => {
   const map = model.enabledMapFromSettings({ refreshIntervalSec: 60 }, catalog)
   assert.equal(model.enabledIdList(map).join(","), "")
+})
+
+test("legacy upgrades preserve old selections without enabling new providers", () => {
+  // Frozen pre-TypeSafe catalog, independent of the migration implementation.
+  const oldIds = "openai,anthropic,google,xai,mistral,deepseek,moonshot,cohere,minimax,ai21,stability,scale,copilot,cursor,devin,warp,zed,tabnine,sourcegraph,lovable,bolt,groq,fireworks,together,huggingface,cerebras,sambanova,replicate,fal,baseten,modal,novita,openrouter,deepinfra,lambda,nebius,nscale,perplexity,poe,elevenlabs,deepgram,assemblyai,hume,otter,descript,runway,luma,heygen,synthesia,ideogram,midjourney,recraft,grammarly,pinecone,jina,qdrant".split(",")
+  const expanded = [...catalog, {id: "future-provider", name: "Future provider"}]
+  for (const disabled of [oldIds, ["openai"], []]) {
+    const map = model.enabledMapFromSettings({disabledIds: disabled.join(",")}, expanded)
+    const expected = oldIds.filter(id => !disabled.includes(id)).sort()
+    assert.equal(model.enabledIdList(map).join(","), expected.join(","))
+    assert.equal(model.isEnabled("typesafe", map), false)
+    assert.equal(model.isEnabled("future-provider", map), false)
+  }
+  const explicit = model.enabledMapFromSettings({enabledIds: "typesafe", disabledIds: oldIds.join(",")}, expanded)
+  assert.equal(model.enabledIdList(explicit).join(","), "typesafe")
 })
 
 test("legacy partial disabledIds keep everyone else on", () => {

@@ -271,6 +271,49 @@ with ThreadPoolExecutor() as pool:
         self.assertTrue(down["degraded"])
         self.assertEqual(down["indicator"], "critical")
 
+    def test_typesafe_catalog_and_fetch(self):
+        selected = CLI.selected_rows(CLI.load_catalog(), ["typesafe"])
+        self.assertEqual(len(selected), 1)
+        company = selected[0]
+        self.assertEqual(company, {
+            "id": "typesafe", "name": "TypeSafe",
+            "url": "https://status.typesafe.ai/", "kind": "betterstack",
+            "endpoint": "https://status.typesafe.ai/index.json",
+        })
+        # Recorded response includes resolved incidents and historical downtime.
+        with mock.patch.object(CLI, "http_get", return_value=(read("typesafe-operational.json"), "application/json")) as get:
+            report = CLI.fetch_report(CLI.load_catalog(), ["typesafe"])
+        get.assert_called_once_with(company["endpoint"])
+        self.assertEqual(len(report["companies"]), 1)
+        result = report["companies"][0]
+        self.assertEqual(result["name"], "TypeSafe")
+        self.assertEqual(result["url"], company["url"])
+        self.assertEqual(result["indicator"], "none")
+        self.assertFalse(result["degraded"])
+        self.assertEqual(result["error"], "")
+        self.assertEqual(result["incidents"], [])
+
+    def test_typesafe_aggregate_states_and_failures(self):
+        company = CLI.selected_rows(CLI.load_catalog(), ["typesafe"])[0]
+        # Synthetic variants of the recorded response exercise unavailable states.
+        for state, indicator in [("downtime", "critical"), ("degraded", "minor"),
+                                 ("maintenance", "maintenance")]:
+            payload = json.loads(read("typesafe-operational.json"))
+            payload["data"]["attributes"]["aggregate_state"] = state
+            with self.subTest(state=state), mock.patch.object(CLI, "http_get", return_value=(json.dumps(payload), "application/json")):
+                result = CLI.fetch_company(company)
+                self.assertEqual(result["indicator"], indicator)
+                self.assertTrue(result["degraded"])
+        for body in ["{}", "<html>Unavailable</html>"]:
+            with self.subTest(body=body), mock.patch.object(CLI, "http_get", return_value=(body, "text/plain")):
+                result = CLI.fetch_company(company)
+                self.assertEqual(result["indicator"], "unknown")
+                self.assertTrue(result["error"])
+        with mock.patch.object(CLI, "http_get", side_effect=TimeoutError("timed out")):
+            result = CLI.fetch_company(company)
+        self.assertEqual(result["indicator"], "unknown")
+        self.assertEqual(result["error"], "timed out")
+
     def test_instatus_up(self):
         result = FS.parse_instatus(read("instatus-up.json"), row("perplexity"))
         self.assertFalse(result["degraded"])
